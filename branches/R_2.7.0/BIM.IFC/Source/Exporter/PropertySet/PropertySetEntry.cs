@@ -388,6 +388,22 @@ namespace BIM.IFC.Exporter.PropertySet
         }
 
         /// <summary>
+        /// Creates an entry of type length.
+        /// </summary>
+        /// <param name="revitParameterName">
+        /// Revit parameter name.
+        /// </param>
+        /// <returns>
+        /// The PropertySetEntry.
+        /// </returns>
+        public static PropertySetEntry CreateLength(string revitParameterName)
+        {
+            PropertySetEntry pse = new PropertySetEntry(revitParameterName);
+            pse.PropertyType = PropertyType.Length;
+            return pse;
+        }
+        
+        /// <summary>
         /// Creates an entry of type positive length.
         /// </summary>
         /// <param name="revitParameterName">
@@ -596,6 +612,12 @@ namespace BIM.IFC.Exporter.PropertySet
                     {
                         double scale = exporterIFC.LinearScale;
                         propHnd = PropertyUtil.CreateRealPropertyFromElementOrSymbol(file, scale, element, revitParamNameToUse, ifcPropertyName, valueType);
+                        break;
+                    }
+                case PropertyType.Length:
+                    {
+                        propHnd = PropertyUtil.CreateLengthMeasurePropertyFromElementOrSymbol(file, exporterIFC, element, revitParamNameToUse,
+                            builtInParameter, ifcPropertyName, valueType);
                         break;
                     }
                 case PropertyType.PositiveLength:

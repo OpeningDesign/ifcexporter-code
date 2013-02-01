@@ -274,7 +274,7 @@ namespace BIM.IFC.Exporter
                         }
                         ecData.SetLocalPlacement(localPlacement);
 
-                        SolidMeshGeometryInfo solidMeshInfo = GeometryUtil.GetSolidMeshGeometry(geomElem, Transform.Identity);
+                        SolidMeshGeometryInfo solidMeshInfo = GeometryUtil.GetSplitSolidMeshGeometry(geomElem);
                         IList<Solid> solids = solidMeshInfo.GetSolids();
                         IList<Mesh> meshes = solidMeshInfo.GetMeshes();
 
@@ -288,7 +288,7 @@ namespace BIM.IFC.Exporter
                             {
                                 GeometryElement subElementGeom = GeometryUtil.GetOneLevelGeometryElement(subElement.get_Geometry(geomOptions));
 
-                                SolidMeshGeometryInfo subElementSolidMeshInfo = GeometryUtil.GetSolidMeshGeometry(subElementGeom, Transform.Identity);
+                                SolidMeshGeometryInfo subElementSolidMeshInfo = GeometryUtil.GetSplitSolidMeshGeometry(subElementGeom);
                                 IList<Solid> subElementSolids = subElementSolidMeshInfo.GetSolids();
                                 IList<Mesh> subElementMeshes = subElementSolidMeshInfo.GetMeshes();
                                 foreach (Solid subElementSolid in subElementSolids)

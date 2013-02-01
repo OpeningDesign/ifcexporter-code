@@ -74,6 +74,13 @@ namespace BIM.IFC.Toolkit
         DoorStyle = 21,
     }
 
+    enum IFCDistributionFlowElementSubElements
+    {
+        PSetDistributionFlowElementCommon = 1024,
+        PSetFlowTerminalAirTerminal = 1025,
+        PSetAirTerminalTypeCommon = 1026,
+    }
+
     enum IFCLightFixtureTypeSubElements
     {
         PSetLightFixtureTypeCommon = 1

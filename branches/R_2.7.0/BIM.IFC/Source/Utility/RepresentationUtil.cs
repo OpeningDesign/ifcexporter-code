@@ -476,7 +476,7 @@ namespace BIM.IFC.Utility
 
             if (!exporterIFC.ExportAs2x2)
             {
-                info = GeometryUtil.GetSolidMeshGeometry(geometryElement, Transform.Identity);
+                info = GeometryUtil.GetSplitSolidMeshGeometry(geometryElement, Transform.Identity);
                 IList<Mesh> meshes = info.GetMeshes();
                 if (meshes.Count == 0)
                 {

@@ -108,7 +108,7 @@ namespace BIM.IFC.Exporter
                 using (IFCPlacementSetter setter = IFCPlacementSetter.Create(exporterIFC, element, null, canExportAxis ? orientTrf : null, ElementId.InvalidElementId))
                 {
                     IFCAnyHandle localPlacement = setter.GetPlacement();
-                    SolidMeshGeometryInfo solidMeshInfo = GeometryUtil.GetSolidMeshGeometry(geometryElement, Transform.Identity);
+                    SolidMeshGeometryInfo solidMeshInfo = GeometryUtil.GetSplitSolidMeshGeometry(geometryElement);
 
                     using (IFCExtrusionCreationData extrusionCreationData = new IFCExtrusionCreationData())
                     {
@@ -142,28 +142,24 @@ namespace BIM.IFC.Exporter
                         // use other methods below if this one fails.
                         if (solids.Count == 1 && meshes.Count == 0 && (canExportAxis && (curve is Line)))
                         {
-                            IList<Solid> splitVolumes = SolidUtils.SplitVolumes(solids[0]);
-                            if (splitVolumes.Count == 1)
-                            {
-                                bool completelyClipped;
-                                beamDirection = orientTrf.BasisX;
-                                Plane beamExtrusionPlane = new Plane(orientTrf.BasisY, orientTrf.BasisZ, orientTrf.Origin);
-                                repHnd = ExtrusionExporter.CreateExtrusionWithClipping(exporterIFC, element,
-                                    catId, solids[0], beamExtrusionPlane, beamDirection, null, out completelyClipped);
-                                if (completelyClipped)
-                                    return;
+                            bool completelyClipped;
+                            beamDirection = orientTrf.BasisX;
+                            Plane beamExtrusionPlane = new Plane(orientTrf.BasisY, orientTrf.BasisZ, orientTrf.Origin);
+                            repHnd = ExtrusionExporter.CreateExtrusionWithClipping(exporterIFC, element,
+                                catId, solids[0], beamExtrusionPlane, beamDirection, null, out completelyClipped);
+                            if (completelyClipped)
+                                return;
 
-                                if (!IFCAnyHandleUtil.IsNullOrHasNoValue(repHnd))
-                                {
-                                    // This is used by the BeamSlopeCalculator.  This should probably be generated automatically by
-                                    // CreateExtrusionWithClipping.
-                                    IFCExtrusionBasis bestAxis = (Math.Abs(beamDirection[0]) > Math.Abs(beamDirection[1])) ?
-                                        IFCExtrusionBasis.BasisX : IFCExtrusionBasis.BasisY;
-                                    extrusionCreationData.Slope = GeometryUtil.GetSimpleExtrusionSlope(beamDirection, bestAxis);
-                                    ElementId materialId = BodyExporter.GetBestMaterialIdFromGeometryOrParameter(solids[0], exporterIFC, element);
-                                    if (materialId != ElementId.InvalidElementId)
-                                        materialIds.Add(materialId);
-                                }
+                            if (!IFCAnyHandleUtil.IsNullOrHasNoValue(repHnd))
+                            {
+                                // This is used by the BeamSlopeCalculator.  This should probably be generated automatically by
+                                // CreateExtrusionWithClipping.
+                                IFCExtrusionBasis bestAxis = (Math.Abs(beamDirection[0]) > Math.Abs(beamDirection[1])) ?
+                                    IFCExtrusionBasis.BasisX : IFCExtrusionBasis.BasisY;
+                                extrusionCreationData.Slope = GeometryUtil.GetSimpleExtrusionSlope(beamDirection, bestAxis);
+                                ElementId materialId = BodyExporter.GetBestMaterialIdFromGeometryOrParameter(solids[0], exporterIFC, element);
+                                if (materialId != ElementId.InvalidElementId)
+                                    materialIds.Add(materialId);
                             }
                         }
 
