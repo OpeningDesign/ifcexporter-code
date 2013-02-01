@@ -104,17 +104,17 @@ namespace BIM.IFC.Exporter
         {
             IList<PropertySetDescription> commonPropertySets = new List<PropertySetDescription>();
 
-            // Manufacturer type information
-            InitPropertySetManufacturerTypeInformation(commonPropertySets);
+            // Building/Site property sets.
+            InitPropertySetBuildingCommon(commonPropertySets, fileVersion);
+            InitPropertySetBuildingWaterStorage(commonPropertySets);
+            InitPropertySetSiteCommon(commonPropertySets);
 
-            // Architectural/Structural property sets.
-            InitPropertySetBeamCommon(commonPropertySets);
-            InitPropertySetColumnCommon(commonPropertySets);
+            // Architectural property sets.
+            InitPropertySetBuildingElementProxyCommon(commonPropertySets);
             InitPropertySetCoveringCommon(commonPropertySets, fileVersion);
             InitPropertySetCurtainWallCommon(commonPropertySets);
             InitPropertySetDoorCommon(commonPropertySets);
-            InitPropertySetLightFixtureTypeCommon(commonPropertySets);
-            InitPropertySetMemberCommon(commonPropertySets);
+            InitPropertySetLevelCommon(commonPropertySets, fileVersion);
             InitPropertySetRailingCommon(commonPropertySets);
             InitPropertySetRampCommon(commonPropertySets);
             InitPropertySetRampFlightCommon(commonPropertySets);
@@ -125,30 +125,32 @@ namespace BIM.IFC.Exporter
             InitPropertySetWallCommon(commonPropertySets);
             InitPropertySetWindowCommon(commonPropertySets);
 
-            // Building property sets.
-            InitPropertySetBuildingCommon(commonPropertySets, fileVersion);
-            InitPropertySetBuildingWaterStorage(commonPropertySets);
-
-            // Proxy property sets.
-            InitPropertySetElementShading(commonPropertySets);
-
-            // Level property sets.
-            InitPropertySetLevelCommon(commonPropertySets, fileVersion);
-
-            // Site property sets.
-            InitPropertySetSiteCommon(commonPropertySets);
-
-            // Building Element Proxy
-            InitPropertySetBuildingElementProxyCommon(commonPropertySets);
-
-            // Space
+            // Space property sets.
             InitPropertySetSpaceCommon(commonPropertySets, fileVersion);
             InitPropertySetSpaceFireSafetyRequirements(commonPropertySets);
             InitPropertySetSpaceLightingRequirements(commonPropertySets);
             InitPropertySetSpaceThermalRequirements(commonPropertySets, fileVersion);
             InitPropertySetGSASpaceCategories(commonPropertySets);
             InitPropertySetSpaceOccupant(commonPropertySets);
+            InitPropertySetSpaceOccupancyRequirements(commonPropertySets);
             InitPropertySetSpaceZones(commonPropertySets, fileVersion);
+
+            // Structural property sets.
+            InitPropertySetBeamCommon(commonPropertySets);
+            InitPropertySetColumnCommon(commonPropertySets);
+            InitPropertySetMemberCommon(commonPropertySets);
+
+            // MEP property sets.
+            InitPropertySetAirTerminalTypeCommon(commonPropertySets);
+            InitPropertySetDistributionFlowElementCommon(commonPropertySets);
+            InitPropertySetFlowTerminalAirTerminal(commonPropertySets);
+            InitPropertySetLightFixtureTypeCommon(commonPropertySets);
+
+            // Energy Analysis property sets.
+            InitPropertySetElementShading(commonPropertySets);
+
+            // Misc. property sets
+            InitPropertySetManufacturerTypeInformation(commonPropertySets);
 
             propertySets.Add(commonPropertySets);
         }
@@ -404,6 +406,92 @@ namespace BIM.IFC.Exporter
             commonPropertySets.Add(propertySetLightFixtureTypeCommon);
         }
 
+        /// <summary>
+        /// Initializes the PSet_DistributionFlowElementCommon property set.
+        /// </summary>
+        /// <param name="commonPropertySets">List to store property sets.</param>
+        private static void InitPropertySetDistributionFlowElementCommon(IList<PropertySetDescription> commonPropertySets)
+        {
+            //property beam common
+            PropertySetDescription propertyDistributionFlowElementCommon = new PropertySetDescription();
+            propertyDistributionFlowElementCommon.Name = "PSet_DistributionFlowElementCommon";
+            propertyDistributionFlowElementCommon.SubElementIndex = (int)IFCDistributionFlowElementSubElements.PSetDistributionFlowElementCommon;
+
+            propertyDistributionFlowElementCommon.EntityTypes.Add(IFCEntityType.IfcDistributionFlowElement);
+
+            PropertySetEntry ifcPSE = PropertySetEntryUtil.CreateReferenceEntry();
+            propertyDistributionFlowElementCommon.AddEntry(ifcPSE);
+
+            commonPropertySets.Add(propertyDistributionFlowElementCommon);
+        }
+
+        /// <summary>
+        /// Initializes the PSet_DistributionFlowElementCommon property set.
+        /// </summary>
+        /// <param name="commonPropertySets">List to store property sets.</param>
+        private static void InitPropertySetFlowTerminalAirTerminal(IList<PropertySetDescription> commonPropertySets)
+        {
+            //property beam common
+            PropertySetDescription propertyFlowTerminalAirTerminal = new PropertySetDescription();
+            propertyFlowTerminalAirTerminal.Name = "Pset_FlowTerminalAirTerminal";
+            propertyFlowTerminalAirTerminal.SubElementIndex = (int)IFCDistributionFlowElementSubElements.PSetFlowTerminalAirTerminal;
+
+            propertyFlowTerminalAirTerminal.EntityTypes.Add(IFCEntityType.IfcFlowTerminal);
+
+            propertyFlowTerminalAirTerminal.AddEntry(PropertySetEntry.CreateEnumeratedValue("AirflowType", PropertyType.Label,
+                typeof(PSetFlowTerminalAirTerminal_AirTerminalAirflowType)));
+            propertyFlowTerminalAirTerminal.AddEntry(PropertySetEntry.CreateEnumeratedValue("Location", PropertyType.Label,
+                typeof(PSetFlowTerminalAirTerminal_AirTerminalLocation)));
+            
+            commonPropertySets.Add(propertyFlowTerminalAirTerminal);
+        }
+
+        /// <summary>
+        /// Initializes the PSet_AirTerminalTypeCommon property set.
+        /// </summary>
+        /// <param name="commonPropertySets">List to store property sets.</param>
+        private static void InitPropertySetAirTerminalTypeCommon(IList<PropertySetDescription> commonPropertySets)
+        {
+            //property air terminal type common
+            PropertySetDescription propertyAirTerminalTypeCommon = new PropertySetDescription();
+            propertyAirTerminalTypeCommon.Name = "PSet_AirTerminalTypeCommon";
+            propertyAirTerminalTypeCommon.SubElementIndex = (int)IFCDistributionFlowElementSubElements.PSetAirTerminalTypeCommon;
+
+            propertyAirTerminalTypeCommon.EntityTypes.Add(IFCEntityType.IfcAirTerminalType);
+
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("Shape", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalShape)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("FlowPattern", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalFlowPattern)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateVolumetricFlowRate("AirFlowrateRange"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateThermodynamicTemperature("TemperatureRange"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("DischargeDirection", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalDischargeDirection)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateLength("ThrowLength"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateReal("AirDiffusionPerformanceIndex"));
+            //propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateMaterial("Material"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("FinishType", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalFinishType)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateLabel("FinishColor"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("MountingType", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalMountingType)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("CoreType", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalCoreType)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreatePlaneAngle("CoreSetHorizontal"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreatePlaneAngle("CoreSetVertical"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateBoolean("HasIntegralControl"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateEnumeratedValue("FlowControlType", PropertyType.Label,
+                typeof(PSetAirTerminalTypeCommon_AirTerminalFlowControlType)));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateBoolean("HasSoundAttenuator"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateBoolean("HasThermalInsulation"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateArea("NeckArea"));
+            propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateArea("EffectiveArea"));
+            //propertyAirTerminalTypeCommon.AddEntry(PropertySetEntry.CreateMass("Weight"));
+            //AirFlowrateVersusFlowControlElement: IfcPropertyTableValue not supported.
+            
+            commonPropertySets.Add(propertyAirTerminalTypeCommon);
+        }
+        
         /// <summary>
         /// Initializes common beam property sets.
         /// </summary>
@@ -688,7 +776,7 @@ namespace BIM.IFC.Exporter
             ifcPSE.PropertyCalculator = stairRiserAndTreadsCalculator;
             propertySetStairFlightCommon.AddEntry(ifcPSE);
 
-            ifcPSE = PropertySetEntry.CreatePositiveLength("NosingLength");
+            ifcPSE = PropertySetEntry.CreateLength("NosingLength");
             ifcPSE.PropertyCalculator = stairRiserAndTreadsCalculator;
             propertySetStairFlightCommon.AddEntry(ifcPSE);
 
@@ -934,6 +1022,29 @@ namespace BIM.IFC.Exporter
             }
 
             commonPropertySets.Add(propertySetSpaceCommon);
+        }
+
+        /// <summary>
+        /// Initializes SpaceOccupancyRequirements property set.
+        /// </summary>
+        /// <param name="commonPropertySets">List to store property sets.</param>
+        private static void InitPropertySetSpaceOccupancyRequirements(IList<PropertySetDescription> commonPropertySets)
+        {
+            //property set space common
+            PropertySetDescription propertySetSpaceOccupancyRequirements = new PropertySetDescription();
+            propertySetSpaceOccupancyRequirements.Name = "Pset_SpaceOccupancyRequirements";
+
+            propertySetSpaceOccupancyRequirements.EntityTypes.Add(IFCEntityType.IfcSpace);
+
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateLabel("OccupancyType"));
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateCount("OccupancyNumber"));
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateCount("OccupancyNumberPeak"));
+            //propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateTime("OccupancyTimePerDay"));
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateArea("AreaPerOccupant"));
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateLength("MinimumHeadroom"));
+            propertySetSpaceOccupancyRequirements.AddEntry(PropertySetEntry.CreateBoolean("IsOutlookDesirable"));
+
+            commonPropertySets.Add(propertySetSpaceOccupancyRequirements);
         }
 
         /// <summary>

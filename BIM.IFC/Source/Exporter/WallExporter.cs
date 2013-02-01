@@ -241,11 +241,13 @@ namespace BIM.IFC.Exporter
         }
 
         /// <summary>
-        /// This routine corrects the orientation of a polyhedron whose normals face inwards instead of outwards.  The assumption
+        /// This routine corrects two problems with the native code:
+        /// 1.  Correct the orientation of a polyhedron whose normals face inwards instead of outwards.  The assumption
         /// is made that all of the faces have either the correct or incorrect orientation for simplicity and performance issues.
+        /// 2.  Correct openings that are incorrectly labelled as recesses.
         /// </summary>
         /// <param name="openingHnd">The opening handle.</param>
-        private static void PotentiallyCorrectOpeningOrientation(IFCAnyHandle openingHnd)
+        private static void PotentiallyCorrectOpeningOrientationAndOpeningType(IFCAnyHandle openingHnd, IFCAnyHandle wallLocalPlacement, double scaledWidth)
         {
             if (IFCAnyHandleUtil.IsNullOrHasNoValue(openingHnd))
                 return;
@@ -257,6 +259,47 @@ namespace BIM.IFC.Exporter
             HashSet<IFCAnyHandle> reps = IFCAnyHandleUtil.GetAggregateInstanceAttribute<HashSet<IFCAnyHandle>>(prodRep, "Representations");
             if (reps == null || reps.Count != 1)
                 return;
+
+            IFCAnyHandle localPlacement = IFCAnyHandleUtil.GetInstanceAttribute(openingHnd, "ObjectPlacement");
+
+            string openingLabel = IFCAnyHandleUtil.GetStringAttribute(openingHnd, "ObjectType");
+            bool possiblyFixRecess = (String.Compare(openingLabel, "Recess", true) == 0) && (!IFCAnyHandleUtil.IsNullOrHasNoValue(localPlacement)) &&
+                (!IFCAnyHandleUtil.IsNullOrHasNoValue(wallLocalPlacement));
+
+            // We are limiting this hotfix to the case where the opening has a local offset but no transformation.
+            XYZ placementOrigin = new XYZ(0, 0, 0);
+            XYZ placementNormal = new XYZ(1, 0, 0);
+            if (possiblyFixRecess)
+            {
+                IFCAnyHandle relativePlacementHnd = IFCAnyHandleUtil.GetInstanceAttribute(localPlacement, "RelativePlacement");
+                if (!IFCAnyHandleUtil.IsNullOrHasNoValue(relativePlacementHnd))
+                {
+                    IFCAnyHandle originHnd = IFCAnyHandleUtil.GetInstanceAttribute(relativePlacementHnd, "Location");
+                    if (!IFCAnyHandleUtil.IsNullOrHasNoValue(originHnd))
+                    {
+                        IList<double> coordList = IFCAnyHandleUtil.GetCoordinates(originHnd);
+                        placementOrigin = new XYZ(-coordList[0], -coordList[1], -coordList[2]);
+                    }
+                    IFCAnyHandle openingRefDirHnd = IFCAnyHandleUtil.GetInstanceAttribute(relativePlacementHnd, "RefDirection");
+                    IFCAnyHandle openingAxisHnd = IFCAnyHandleUtil.GetInstanceAttribute(relativePlacementHnd, "Axis");
+                    if (!IFCAnyHandleUtil.IsNullOrHasNoValue(openingRefDirHnd) && !IFCAnyHandleUtil.IsNullOrHasNoValue(openingAxisHnd))
+                        possiblyFixRecess = false;
+                }
+                if (possiblyFixRecess)
+                {
+                    IFCAnyHandle wallRelativePlacementHnd = IFCAnyHandleUtil.GetInstanceAttribute(wallLocalPlacement, "RelativePlacement");
+                    {
+                        IFCAnyHandle normalHnd = IFCAnyHandleUtil.GetInstanceAttribute(wallRelativePlacementHnd, "RefDirection");
+                        if (!IFCAnyHandleUtil.IsNullOrHasNoValue(normalHnd))
+                        {
+                            IList<double> coordList = IFCAnyHandleUtil.GetAggregateDoubleAttribute<List<double>>(normalHnd, "DirectionRatios");
+                            placementNormal = (new XYZ(coordList[0], coordList[1], coordList[2])).Normalize();
+                        }
+                    }
+                }
+            }
+            double minRelZAlongAxis = 1e+20;
+            double maxRelZAlongAxis = -1e+20;
 
             double eps = MathUtil.Eps();
 
@@ -322,6 +365,14 @@ namespace BIM.IFC.Exporter
                                         throw new InvalidOperationException("Expected IfcCartesianPoint of dimensionality 3.");
 
                                     XYZ currPoint = new XYZ(vertices[0], vertices[1], vertices[2]);
+                                    if (possiblyFixRecess)
+                                    {
+                                        XYZ relPoint = currPoint - placementOrigin;
+                                        double relZ = relPoint.DotProduct(placementNormal);
+                                        minRelZAlongAxis = Math.Min(minRelZAlongAxis, relZ);
+                                        maxRelZAlongAxis = Math.Max(maxRelZAlongAxis, relZ);
+                                    }
+
                                     currBound.Add(currPoint);
 
                                     currBasePoint += currPoint;
@@ -350,6 +401,11 @@ namespace BIM.IFC.Exporter
                         {
                             IFCAnyHandleUtil.SetAttribute(boundary, "Orientation", !listOfAllOrientations[currIndex++]);
                         }
+                    }
+
+                    if (possiblyFixRecess && (minRelZAlongAxis < -scaledWidth / 2.0 + eps) && (maxRelZAlongAxis > scaledWidth / 2.0 - eps))
+                    {
+                        IFCAnyHandleUtil.SetAttribute(openingHnd, "ObjectType", "Opening");
                     }
                 }
             }
@@ -574,8 +630,8 @@ namespace BIM.IFC.Exporter
                         if (!exportParts && wallElement != null && exportingAxis && curve != null)
                         {
                             SolidMeshGeometryInfo solidMeshInfo =
-                                (range == null) ? GeometryUtil.GetSolidMeshGeometry(geometryElement, Transform.Identity) :
-                                    GeometryUtil.GetClippedSolidMeshGeometry(geometryElement, range);
+                                (range == null) ? GeometryUtil.GetSplitSolidMeshGeometry(geometryElement) :
+                                    GeometryUtil.GetSplitClippedSolidMeshGeometry(geometryElement, range);
 
                             solids = solidMeshInfo.GetSolids();
                             meshes = solidMeshInfo.GetMeshes();
@@ -628,7 +684,7 @@ namespace BIM.IFC.Exporter
                                 {
                                     if (validRange)
                                     {
-                                        solidMeshCapsule = GeometryUtil.GetClippedSolidMeshGeometry(geometryElement, range);
+                                        solidMeshCapsule = GeometryUtil.GetSplitClippedSolidMeshGeometry(geometryElement, range);
                                     }
                                     else
                                     {
@@ -654,7 +710,7 @@ namespace BIM.IFC.Exporter
                                     Transform trf = Transform.Identity;
                                     if (geomElemToUse != geometryElement)
                                         trf = famInstWallElem.GetTransform();
-                                    solidMeshCapsule = GeometryUtil.GetSolidMeshGeometry(geomElemToUse, trf);
+                                    solidMeshCapsule = GeometryUtil.GetSplitSolidMeshGeometry(geomElemToUse, trf);
                                 }
 
                                 solids = solidMeshCapsule.GetSolids();
@@ -756,25 +812,17 @@ namespace BIM.IFC.Exporter
 
                                 localWrapper.AddElement(wallHnd, setter, extraParams, true);
 
-                                OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, cutPairOpenings, exporterIFC, localPlacement, setter, localWrapper);
-                                if (exportedBodyDirectly)
+                                if (!exportParts)
                                 {
-                                    OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, extraParams, exporterIFC, localPlacement, setter, localWrapper);
-                                }
-                                else
-                                {
-                                    ICollection<IFCAnyHandle> beforeOpenings = localWrapper.GetAllObjects();
-                                    double scaledWidth = wallElement.Width * scale;
-                                    ExporterIFCUtils.AddOpeningsToElement(exporterIFC, wallHnd, wallElement, scaledWidth, range, setter, localPlacement, localWrapper.ToNative());
-                                    ICollection<IFCAnyHandle> afterOpenings = localWrapper.GetAllObjects();
-                                    if (beforeOpenings.Count != afterOpenings.Count)
+                                    OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, cutPairOpenings, exporterIFC, localPlacement, setter, localWrapper);
+                                    if (exportedBodyDirectly)
                                     {
-                                        foreach (IFCAnyHandle before in beforeOpenings)
-                                            afterOpenings.Remove(before);
-                                        foreach (IFCAnyHandle potentiallyBadOpening in afterOpenings)
-                                        {
-                                            PotentiallyCorrectOpeningOrientation(potentiallyBadOpening);
-                                        }
+                                        OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, extraParams, exporterIFC, localPlacement, setter, localWrapper);
+                                    }
+                                    else
+                                    {
+                                        double scaledWidth = wallElement.Width * scale;
+                                        ExporterIFCUtils.AddOpeningsToElement(exporterIFC, wallHnd, wallElement, scaledWidth, range, setter, localPlacement, localWrapper.ToNative());
                                     }
                                 }
 
@@ -802,13 +850,16 @@ namespace BIM.IFC.Exporter
                                         CategoryUtil.CreateMaterialAssociation(doc, exporterIFC, wallHnd, matId);
                                 }
 
-                                if (exportingInplaceOpenings)
+                                if (!exportParts)
                                 {
-                                    ExporterIFCUtils.AddOpeningsToElement(exporterIFC, wallHnd, famInstWallElem, 0.0, range, setter, localPlacement, localWrapper.ToNative());
-                                }
+                                    if (exportingInplaceOpenings)
+                                    {
+                                        ExporterIFCUtils.AddOpeningsToElement(exporterIFC, wallHnd, famInstWallElem, 0.0, range, setter, localPlacement, localWrapper.ToNative());
+                                    }
 
-                                if (exportedBodyDirectly)
-                                    OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, extraParams, exporterIFC, localPlacement, setter, localWrapper);
+                                    if (exportedBodyDirectly)
+                                        OpeningUtil.CreateOpeningsIfNecessary(wallHnd, element, extraParams, exporterIFC, localPlacement, setter, localWrapper);
+                                }
                             }
 
                             PropertyUtil.CreateInternalRevitPropertySets(exporterIFC, element, localWrapper);

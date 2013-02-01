@@ -264,13 +264,13 @@ namespace BIM.IFC.Exporter
                     SolidMeshGeometryInfo solidMeshInfo;
                     if (validRange)
                     {
-                        solidMeshInfo = GeometryUtil.GetClippedSolidMeshGeometry(geometryElement, range);
+                        solidMeshInfo = GeometryUtil.GetSplitClippedSolidMeshGeometry(geometryElement, range);
                         if (solidMeshInfo.GetSolids().Count == 0 && solidMeshInfo.GetMeshes().Count == 0)
                             return;
                     }
                     else
                     {
-                        solidMeshInfo = GeometryUtil.GetSolidMeshGeometry(geometryElement, Transform.Identity);
+                        solidMeshInfo = GeometryUtil.GetSplitSolidMeshGeometry(geometryElement);
                     }
 
                     using (IFCExtrusionCreationData extrusionCreationData = new IFCExtrusionCreationData())

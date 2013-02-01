@@ -1702,6 +1702,36 @@ namespace BIM.IFC.Exporter.PropertySet
         }
 
         /// <summary>
+        /// Create a length property from the element's or type's parameter.
+        /// </summary>
+        /// <param name="file">The IFC file.</param>
+        /// <param name="exporterIFC">The ExporterIFC.</param>
+        /// <param name="elem">The Element.</param>
+        /// <param name="revitParameterName">The name of the parameter.</param>
+        /// <param name="builtInParameterName">The name of the built-in parameter, can be null.</param>
+        /// <param name="ifcPropertyName">The name of the property.</param>
+        /// <param name="valueType">The value type of the property.</param>
+        /// <returns>The created property handle.</returns>
+        public static IFCAnyHandle CreateLengthMeasurePropertyFromElement(IFCFile file, ExporterIFC exporterIFC, Element elem,
+           string revitParameterName, string builtInParameterName, string ifcPropertyName, PropertyValueType valueType)
+        {
+            double propertyValue;
+            double scale = exporterIFC.LinearScale;
+
+            if (ParameterUtil.GetDoubleValueFromElement(elem, revitParameterName, out propertyValue))
+            {
+                return CreateLengthMeasurePropertyFromCache(file, scale, ifcPropertyName, propertyValue, valueType);
+            }
+
+            if (builtInParameterName != null && ParameterUtil.GetDoubleValueFromElement(elem, builtInParameterName, out propertyValue))
+            {
+                return CreateLengthMeasurePropertyFromCache(file, scale, ifcPropertyName, propertyValue, valueType);
+            }
+
+            return null;
+        }
+        
+        /// <summary>
         /// Create a positive length property from the element's or type's parameter.
         /// </summary>
         /// <param name="file">The IFC file.</param>
@@ -1731,7 +1761,39 @@ namespace BIM.IFC.Exporter.PropertySet
 
             return null;
         }
-        
+
+        /// <summary>
+        /// Create a length property from the element's or type's parameter.
+        /// </summary>
+        /// <param name="file">The IFC file.</param>
+        /// <param name="exporterIFC">The ExporterIFC.</param>
+        /// <param name="elem">The Element.</param>
+        /// <param name="revitParameterName">The name of the parameter.</param>
+        /// <param name="revitBuiltInParam">The optional built-in parameter.</param>
+        /// <param name="ifcPropertyName">The name of the property.</param>
+        /// <param name="valueType">The value type of the property.</param>
+        /// <returns>The created property handle.</returns>
+        public static IFCAnyHandle CreateLengthMeasurePropertyFromElementOrSymbol(IFCFile file, ExporterIFC exporterIFC, Element elem,
+           string revitParameterName, BuiltInParameter revitBuiltInParam, string ifcPropertyName, PropertyValueType valueType)
+        {
+            string builtInParamName = null;
+            if (revitBuiltInParam != BuiltInParameter.INVALID)
+                builtInParamName = LabelUtils.GetLabelFor(revitBuiltInParam);
+
+            IFCAnyHandle propHnd = CreateLengthMeasurePropertyFromElement(file, exporterIFC, elem, revitParameterName, builtInParamName, ifcPropertyName, valueType);
+            if (!IFCAnyHandleUtil.IsNullOrHasNoValue(propHnd))
+                return propHnd;
+
+            // For Symbol
+            Document document = elem.Document;
+            ElementId typeId = elem.GetTypeId();
+            Element elemType = document.GetElement(typeId);
+            if (elemType != null)
+                return CreateLengthMeasurePropertyFromElement(file, exporterIFC, elemType, revitParameterName, builtInParamName, ifcPropertyName, valueType);
+            else
+                return null;
+        }
+
         /// <summary>
         /// Create a positive length property from the element's or type's parameter.
         /// </summary>

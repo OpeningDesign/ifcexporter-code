@@ -1457,12 +1457,12 @@ namespace BIM.IFC.Exporter
             Element element, 
             ElementId categoryId,
             ElementId overrideMaterialId,
-            IList<GeometryObject> geometryListIn,
+            IList<GeometryObject> geometryList,
             BodyExporterOptions options,
             IFCExtrusionCreationData exportBodyParams) 
         {
             BodyData bodyData = new BodyData();
-            if (geometryListIn.Count == 0)
+            if (geometryList.Count == 0)
                 return bodyData;
 
             Document document = element.Document;
@@ -1476,44 +1476,13 @@ namespace BIM.IFC.Exporter
 
             double eps = application.VertexTolerance * scale;
 
-            IList<GeometryObject> splitGeometryList = new List<GeometryObject>();
-
             bool allFaces = true;
-            foreach (GeometryObject geomObject in geometryListIn)
+            foreach (GeometryObject geomObject in geometryList)
             {
-                try
-                {
-                    bool split = false;
-                    if (geomObject is Solid)
-                    {
-                        Solid solid = geomObject as Solid;
-                        IList<Solid> splitVolumes = SolidUtils.SplitVolumes(solid);
+                if (allFaces && !(geomObject is Face))
                         allFaces = false;
-
-                        if (splitVolumes != null && splitVolumes.Count != 0)
-                        {
-                            split = true;
-                            foreach (Solid currSolid in splitVolumes)
-                            {
-                                splitGeometryList.Add(currSolid);
-                                // The geometry element created by SplitVolumesis a copy which will have its own allocated
-                                // membership - this needs to be stored and disposed of (see AllocatedGeometryObjectCache
-                                // for details)
-                                ExporterCacheManager.AllocatedGeometryObjectCache.AddGeometryObject(currSolid);
-                            }
+                break;
                         }
-                    }
-                    else if (allFaces && !(geomObject is Face))
-                        allFaces = false;
-
-                    if (!split)
-                        splitGeometryList.Add(geomObject);
-                }
-                catch
-                {
-                    splitGeometryList.Add(geomObject);
-                }
-            }
 
             IList<IFCAnyHandle> bodyItems = new List<IFCAnyHandle>();
             IList<ElementId> materialIdsForExtrusions = new List<ElementId>();
@@ -1536,13 +1505,13 @@ namespace BIM.IFC.Exporter
                     if (allFaces)
                     {
                         faces = new List<Face>();
-                        foreach (GeometryObject geometryObject in splitGeometryList)
+                        foreach (GeometryObject geometryObject in geometryList)
                         {
                             faces.Add(geometryObject as Face);
                         }
                     }
 
-                    int numExtrusionsToCreate = allFaces ? 1 : splitGeometryList.Count;
+                    int numExtrusionsToCreate = allFaces ? 1 : geometryList.Count;
 
                     IList<IList<IFCExtrusionData>> extrusionLists = new List<IList<IFCExtrusionData>>();
                     for (int ii = 0; ii < numExtrusionsToCreate && tryToExportAsExtrusion; ii++)
@@ -1560,7 +1529,7 @@ namespace BIM.IFC.Exporter
                         if (allFaces)
                             extrusionList = IFCExtrusionCalculatorUtils.CalculateExtrusionData(extrusionOptions, faces);
                         else
-                            extrusionList = IFCExtrusionCalculatorUtils.CalculateExtrusionData(extrusionOptions, splitGeometryList[ii]);
+                            extrusionList = IFCExtrusionCalculatorUtils.CalculateExtrusionData(extrusionOptions, geometryList[ii]);
 
                         if (extrusionList.Count == 0)
                         {
@@ -1585,7 +1554,7 @@ namespace BIM.IFC.Exporter
                     for (int ii = 0; ii < numCreatedExtrusions && tryToExportAsExtrusion; ii++)
                     {
                         int geomIndex = exportAsExtrusion[ii];
-                        bodyData.AddMaterial(SetBestMaterialIdInExporter(splitGeometryList[geomIndex], element, overrideMaterialId, exporterIFC));
+                        bodyData.AddMaterial(SetBestMaterialIdInExporter(geometryList[geomIndex], element, overrideMaterialId, exporterIFC));
 
                         if (exportBodyParams != null && exportBodyParams.AreInnerRegionsOpenings)
                         {
@@ -1671,7 +1640,7 @@ namespace BIM.IFC.Exporter
                     {
                         bool exported = false;
                         int geomIndex = exportAsSweptSolid[ii];
-                        Solid solid = splitGeometryList[geomIndex] as Solid;
+                        Solid solid = geometryList[geomIndex] as Solid;
                         // TODO: allFaces to SweptSolid
                         if (solid != null)
                         {
@@ -1753,9 +1722,9 @@ namespace BIM.IFC.Exporter
             using (IFCTransformSetter transformSetter = IFCTransformSetter.Create())
             {
                 if (exportBodyParams != null && (exportAsBRep.Count == 0))
-                    bodyData.BrepOffsetTransform = transformSetter.InitializeFromBoundingBox(exporterIFC, splitGeometryList, exportBodyParams);
+                    bodyData.BrepOffsetTransform = transformSetter.InitializeFromBoundingBox(exporterIFC, geometryList, exportBodyParams);
 
-                return ExportBodyAsBRep(exporterIFC, splitGeometryList, exportAsBRep, bodyItems, element, categoryId, overrideMaterialId, contextOfItems, eps, options, bodyData);
+                return ExportBodyAsBRep(exporterIFC, geometryList, exportAsBRep, bodyItems, element, categoryId, overrideMaterialId, contextOfItems, eps, options, bodyData);
             }
         }
 
@@ -1809,7 +1778,14 @@ namespace BIM.IFC.Exporter
            IFCExtrusionCreationData exportBodyParams)
         {
             IList<GeometryObject> geomList = new List<GeometryObject>();
-            geomList.Add(geometryObject);
+            if (geometryObject is Solid)
+            {
+                IList<Solid> splitVolumes = GeometryUtil.SplitVolumes(geometryObject as Solid);
+                foreach (Solid solid in splitVolumes)
+                    geomList.Add(solid);
+            }
+            else
+                geomList.Add(geometryObject);
             return ExportBody(application, exporterIFC, element, categoryId, overrideMaterialId, geomList, options, exportBodyParams);
         }
 
@@ -1834,7 +1810,7 @@ namespace BIM.IFC.Exporter
 
             if (!exporterIFC.ExportAs2x2)
             {
-                info = GeometryUtil.GetSolidMeshGeometry(geometryElement, Transform.Identity);
+                info = GeometryUtil.GetSplitSolidMeshGeometry(geometryElement);
                 IList<Mesh> meshes = info.GetMeshes();
                 if (meshes.Count == 0)
                 {
