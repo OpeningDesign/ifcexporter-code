@@ -450,7 +450,11 @@ namespace BIM.IFC.Utility
         /// <summary>
         /// Zone - no type in IFC2x3.
         /// </summary>
-        ExportZone
+        ExportZone,
+        /// <summary>
+        /// Grid - no type in IFC2x3.
+        /// </summary>
+        ExportGrid,
     }
 
 
@@ -635,6 +639,8 @@ namespace BIM.IFC.Utility
             }
             else if (IsEqualToTypeName(ifcClassName, ("IfcFooting")))
                 return IFCExportType.ExportFooting;
+            else if (String.Compare(ifcClassName, "IfcGrid", true) == 0)
+                return IFCExportType.ExportGrid;
             else if (String.Compare(ifcClassName, "IfcMember", true) == 0)
                 return IFCExportType.ExportMemberType;
             else if (String.Compare(ifcClassName, "IfcOpeningElement", true) == 0)
@@ -842,7 +848,7 @@ namespace BIM.IFC.Utility
                 return IFCExportType.ExportValveType;
             else if (IsEqualToTypeName(ifcClassName, ("IfcWasteTerminal")))
                 return IFCExportType.ExportWasteTerminalType;
-            else if (ifcClassName.StartsWith("Ifc"))
+            else if (ifcClassName.StartsWith("Ifc", true, null))
             {
                 // This used to throw an exception, but this could abort export if the user enters a bad IFC class name
                 // in the ExportLayerOptions table.  In the future, we should log this.

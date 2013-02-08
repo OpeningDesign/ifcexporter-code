@@ -1243,10 +1243,11 @@ namespace BIM.IFC.Exporter
                     if (startIndexForObject[matToUse + 1] == ii)
                         matToUse++;
                     HashSet<IFCAnyHandle> currentFaceHashSet = currentFaceHashSetList[ii];
+                    ElementId currMatId = materialIds[matToUse];
 
                     IFCAnyHandle faceOuter = IFCInstanceExporter.CreateClosedShell(file, currentFaceHashSet);
-                    IFCAnyHandle brepHnd = RepresentationUtil.CreateFacetedBRep(exporterIFC, document, faceOuter, materialIds[matToUse]);
-                    
+                    IFCAnyHandle brepHnd = RepresentationUtil.CreateFacetedBRep(exporterIFC, document, faceOuter, currMatId);
+
                     if (!IFCAnyHandleUtil.IsNullOrHasNoValue(brepHnd))
                     {
                         if (useMappedGeometriesIfPossible)
@@ -1445,15 +1446,13 @@ namespace BIM.IFC.Exporter
         /// <summary>
         /// Exports list of geometries to IFC body representation.
         /// </summary>
-        /// <param name="application">The Revit application.</param>
         /// <param name="exporterIFC">The ExporterIFC object.</param>
         /// <param name="categoryId">The category id.</param>
         /// <param name="geometryListIn">The geometry list.</param>
         /// <param name="options">The settings for how to export the body.</param>
         /// <param name="exportBodyParams">The extrusion creation data.</param>
         /// <returns>The BodyData containing the handle, offset and material ids.</returns>
-        public static BodyData ExportBody(Autodesk.Revit.ApplicationServices.Application application, 
-            ExporterIFC exporterIFC,
+        public static BodyData ExportBody(ExporterIFC exporterIFC,
             Element element, 
             ElementId categoryId,
             ElementId overrideMaterialId,
@@ -1474,7 +1473,7 @@ namespace BIM.IFC.Exporter
             IFCAnyHandle contextOfItems = exporterIFC.Get3DContextHandle("Body");
             double scale = exporterIFC.LinearScale;
 
-            double eps = application.VertexTolerance * scale;
+            double eps = element.Document.Application.VertexTolerance * scale;
 
             bool allFaces = true;
             foreach (GeometryObject geomObject in geometryList)
@@ -1731,7 +1730,6 @@ namespace BIM.IFC.Exporter
         /// <summary>
         /// Exports list of solids and meshes to IFC body representation.
         /// </summary>
-        /// <param name="application">The Revit application.</param>
         /// <param name="exporterIFC">The ExporterIFC object.</param>
         /// <param name="categoryId">The category id.</param>
         /// <param name="solids">The solids.</param>
@@ -1743,8 +1741,7 @@ namespace BIM.IFC.Exporter
         /// use the cached version if it exists, or create it.</param>
         /// <param name="exportBodyParams">The extrusion creation data.</param>
         /// <returns>The body data.</returns>
-        public static BodyData ExportBody(Autodesk.Revit.ApplicationServices.Application application, 
-            ExporterIFC exporterIFC, 
+        public static BodyData ExportBody(ExporterIFC exporterIFC, 
             Element element, 
             ElementId categoryId,
             ElementId overrideMaterialId, 
@@ -1759,20 +1756,19 @@ namespace BIM.IFC.Exporter
             foreach (Mesh mesh in meshes)
                 objects.Add(mesh);
 
-            return ExportBody(application, exporterIFC, element, categoryId, overrideMaterialId, objects, options, exportBodyParams);
+            return ExportBody(exporterIFC, element, categoryId, overrideMaterialId, objects, options, exportBodyParams);
         }
 
         /// <summary>
         /// Exports a geometry object to IFC body representation.
         /// </summary>
-        /// <param name="application">The Revit application.</param>
         /// <param name="exporterIFC">The ExporterIFC object.</param>
         /// <param name="categoryId">The category id.</param>
         /// <param name="geometryObject">The geometry object.</param>
         /// <param name="options">The settings for how to export the body.</param>
         /// <param name="exportBodyParams">The extrusion creation data.</param>
         /// <returns>The body data.</returns>
-        public static BodyData ExportBody(Autodesk.Revit.ApplicationServices.Application application, ExporterIFC exporterIFC,
+        public static BodyData ExportBody(ExporterIFC exporterIFC,
            Element element, ElementId categoryId, ElementId overrideMaterialId,
            GeometryObject geometryObject, BodyExporterOptions options,
            IFCExtrusionCreationData exportBodyParams)
@@ -1786,13 +1782,12 @@ namespace BIM.IFC.Exporter
             }
             else
                 geomList.Add(geometryObject);
-            return ExportBody(application, exporterIFC, element, categoryId, overrideMaterialId, geomList, options, exportBodyParams);
+            return ExportBody(exporterIFC, element, categoryId, overrideMaterialId, geomList, options, exportBodyParams);
         }
 
         /// <summary>
         /// Exports a geometry object to IFC body representation.
         /// </summary>
-        /// <param name="application">The Revit application.</param>
         /// <param name="exporterIFC">The ExporterIFC object.</param>
         /// <param name="categoryId">The category id.</param>
         /// <param name="geometryElement">The geometry element.</param>
@@ -1800,7 +1795,7 @@ namespace BIM.IFC.Exporter
         /// <param name="exportBodyParams">The extrusion creation data.</param>
         /// <param name="brepOffsetTransform">If the body is exported as a BRep or surface model, the transform used to shift it to the local origin.</param>
         /// <returns>The body data.</returns>
-        public static BodyData ExportBody(Autodesk.Revit.ApplicationServices.Application application, ExporterIFC exporterIFC,
+        public static BodyData ExportBody(ExporterIFC exporterIFC,
            Element element, ElementId categoryId, ElementId overrideMaterialId, 
            GeometryElement geometryElement, BodyExporterOptions options,
            IFCExtrusionCreationData exportBodyParams)
@@ -1825,7 +1820,7 @@ namespace BIM.IFC.Exporter
             if (geomList.Count == 0)
                 geomList.Add(geometryElement);
 
-            return ExportBody(application, exporterIFC, element, categoryId, overrideMaterialId, geomList, 
+            return ExportBody(exporterIFC, element, categoryId, overrideMaterialId, geomList, 
                 options, exportBodyParams);
         }
     }

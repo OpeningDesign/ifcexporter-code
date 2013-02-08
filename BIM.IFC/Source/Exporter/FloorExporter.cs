@@ -192,7 +192,7 @@ namespace BIM.IFC.Exporter
                                     BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(true);
                                     bodyExporterOptions.TessellationLevel = BodyExporterOptions.BodyTessellationLevel.Coarse;
                                     BodyData bodyData;
-                                    IFCAnyHandle prodDefHnd = RepresentationUtil.CreateBRepProductDefinitionShape(floorElement.Document.Application, exporterIFC,
+                                    IFCAnyHandle prodDefHnd = RepresentationUtil.CreateAppropriateProductDefinitionShape(exporterIFC,
                                         floorElement, catId, geometryElement, bodyExporterOptions, null, ecData, out bodyData);
                                     if (IFCAnyHandleUtil.IsNullOrHasNoValue(prodDefHnd))
                                     {

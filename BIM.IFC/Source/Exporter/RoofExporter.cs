@@ -65,7 +65,7 @@ namespace BIM.IFC.Exporter
 
                         BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(true);
                         BodyData bodyData;
-                        IFCAnyHandle representation = RepresentationUtil.CreateBRepProductDefinitionShape(roof.Document.Application, exporterIFC, roof,
+                        IFCAnyHandle representation = RepresentationUtil.CreateAppropriateProductDefinitionShape(exporterIFC, roof,
                             categoryId, geometryElement, bodyExporterOptions, null, ecData, out bodyData);
 
                         if (IFCAnyHandleUtil.IsNullOrHasNoValue(representation))
