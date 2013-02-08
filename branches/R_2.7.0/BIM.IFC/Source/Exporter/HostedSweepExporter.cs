@@ -71,7 +71,7 @@ namespace BIM.IFC.Exporter
                         ElementId categoryId = CategoryUtil.GetSafeCategoryId(element);
 
                         BodyExporterOptions bodyExporterOptions = new BodyExporterOptions();
-                        IFCAnyHandle bodyRep = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, categoryId, ElementId.InvalidElementId,
+                        IFCAnyHandle bodyRep = BodyExporter.ExportBody(exporterIFC, element, categoryId, ElementId.InvalidElementId,
                             geometryElement, bodyExporterOptions, ecData).RepresentationHnd;
                         if (IFCAnyHandleUtil.IsNullOrHasNoValue(bodyRep))
                         {

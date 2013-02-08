@@ -307,13 +307,13 @@ namespace BIM.IFC.Exporter
 
                         if (solids.Count > 0 || meshes.Count > 0)
                         {
-                            bodyData = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, ElementId.InvalidElementId, solids, meshes, bodyExporterOptions, ecData);
+                            bodyData = BodyExporter.ExportBody(exporterIFC, element, catId, ElementId.InvalidElementId, solids, meshes, bodyExporterOptions, ecData);
                         }
                         else
                         {
                             IList<GeometryObject> geomlist = new List<GeometryObject>();
                             geomlist.Add(geomElem);
-                            bodyData = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, ElementId.InvalidElementId, geomlist, bodyExporterOptions, ecData);
+                            bodyData = BodyExporter.ExportBody(exporterIFC, element, catId, ElementId.InvalidElementId, geomlist, bodyExporterOptions, ecData);
                         }
 
                         IFCAnyHandle bodyRep = bodyData.RepresentationHnd;

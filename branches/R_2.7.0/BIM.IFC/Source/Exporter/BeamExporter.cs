@@ -170,14 +170,14 @@ namespace BIM.IFC.Exporter
                             BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(true);
                             if (solids.Count > 0 || meshes.Count > 0)
                             {
-                                bodyData = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, ElementId.InvalidElementId,
+                                bodyData = BodyExporter.ExportBody(exporterIFC, element, catId, ElementId.InvalidElementId,
                                     solids, meshes, bodyExporterOptions, extrusionCreationData);
                             }
                             else
                             {
                                 IList<GeometryObject> geomlist = new List<GeometryObject>();
                                 geomlist.Add(geometryElement);
-                                bodyData = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, ElementId.InvalidElementId, 
+                                bodyData = BodyExporter.ExportBody(exporterIFC, element, catId, ElementId.InvalidElementId, 
                                     geomlist, bodyExporterOptions, extrusionCreationData);
                             }
                             repHnd = bodyData.RepresentationHnd;

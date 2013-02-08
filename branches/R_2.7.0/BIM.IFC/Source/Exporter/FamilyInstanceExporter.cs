@@ -300,7 +300,7 @@ namespace BIM.IFC.Exporter
                                 BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(tryToExportAsExtrusion);
                                 if (geomObjects.Count > 0)
                                 {
-                                    bodyData = BodyExporter.ExportBody(familyInstance.Document.Application, exporterIFC, familyInstance, categoryId, ElementId.InvalidElementId,
+                                    bodyData = BodyExporter.ExportBody(exporterIFC, familyInstance, categoryId, ElementId.InvalidElementId,
                                         geomObjects, bodyExporterOptions, extraParams);
                                     typeInfo.MaterialIds = bodyData.MaterialIds;
                                 }
@@ -308,7 +308,7 @@ namespace BIM.IFC.Exporter
                                 {
                                     IList<GeometryObject> exportedGeometries = new List<GeometryObject>();
                                     exportedGeometries.Add(exportGeometry);
-                                    bodyData = BodyExporter.ExportBody(familyInstance.Document.Application, exporterIFC, familyInstance, categoryId, ElementId.InvalidElementId,
+                                    bodyData = BodyExporter.ExportBody(exporterIFC, familyInstance, categoryId, ElementId.InvalidElementId,
                                         exportedGeometries, bodyExporterOptions, extraParams);
                                 }
                                 bodyRepresentation = bodyData.RepresentationHnd;

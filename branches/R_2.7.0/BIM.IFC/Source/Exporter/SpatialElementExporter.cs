@@ -959,7 +959,7 @@ namespace BIM.IFC.Exporter
                     {
                         BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(true);
                         bodyExporterOptions.TessellationLevel = BodyExporterOptions.BodyTessellationLevel.Coarse;
-                        repHnd = RepresentationUtil.CreateBRepProductDefinitionShape(spatialElement.Document.Application, exporterIFC, spatialElement,
+                        repHnd = RepresentationUtil.CreateAppropriateProductDefinitionShape(exporterIFC, spatialElement,
                             catId, geomElem, bodyExporterOptions, null, extraParams);
                         if (IFCAnyHandleUtil.IsNullOrHasNoValue(repHnd))
                             extraParams.ClearOpenings();

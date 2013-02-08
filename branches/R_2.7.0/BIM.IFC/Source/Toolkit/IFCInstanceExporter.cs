@@ -197,7 +197,8 @@ namespace BIM.IFC.Toolkit
             string applicableOccurrence, HashSet<IFCAnyHandle> propertySets,
             IList<IFCAnyHandle> representationMaps, string elementTag)
         {
-            IFCAnyHandleUtil.SetAttribute(typeProduct, "RepresentationMaps", representationMaps);
+            if (representationMaps != null && representationMaps.Count > 0)
+                IFCAnyHandleUtil.SetAttribute(typeProduct, "RepresentationMaps", representationMaps);
             IFCAnyHandleUtil.SetAttribute(typeProduct, "Tag", elementTag);
 
             SetTypeObject(typeProduct, guid, ownerHistory, name, description, applicableOccurrence, propertySets);

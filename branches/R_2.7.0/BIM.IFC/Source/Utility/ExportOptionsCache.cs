@@ -414,9 +414,6 @@ namespace BIM.IFC.Utility
                 // if the option is set by alternate UI, return the setting in UI.
                 if (ExportSurfaceStylesOverride != null)
                     return (bool)ExportSurfaceStylesOverride;
-                // otherwise export the surface styles except it is 2x3 V2
-                else if (ExportAs2x3CoordinationView2)
-                    return false;
                 return true;
             }
         }

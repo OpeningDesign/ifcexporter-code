@@ -734,14 +734,14 @@ namespace BIM.IFC.Exporter
                                 {
                                     if ((solids.Count > 0) || (meshes.Count > 0))
                                     {
-                                        bodyRep = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, overrideMaterialId,
+                                        bodyRep = BodyExporter.ExportBody(exporterIFC, element, catId, overrideMaterialId,
                                             solids, meshes, bodyExporterOptions, extraParams).RepresentationHnd;
                                     }
                                     else
                                     {
                                         IList<GeometryObject> geomElemList = new List<GeometryObject>();
                                         geomElemList.Add(geometryElement);
-                                        BodyData bodyData = BodyExporter.ExportBody(element.Document.Application, exporterIFC, element, catId, overrideMaterialId,
+                                        BodyData bodyData = BodyExporter.ExportBody(exporterIFC, element, catId, overrideMaterialId,
                                             geomElemList, bodyExporterOptions, extraParams);
                                         bodyRep = bodyData.RepresentationHnd;
                                     }
@@ -821,8 +821,19 @@ namespace BIM.IFC.Exporter
                                     }
                                     else
                                     {
+                                        ICollection<IFCAnyHandle> beforeOpenings = localWrapper.GetAllObjects();
                                         double scaledWidth = wallElement.Width * scale;
                                         ExporterIFCUtils.AddOpeningsToElement(exporterIFC, wallHnd, wallElement, scaledWidth, range, setter, localPlacement, localWrapper.ToNative());
+                                        ICollection<IFCAnyHandle> afterOpenings = localWrapper.GetAllObjects();
+                                        if (beforeOpenings.Count != afterOpenings.Count)
+                                        {
+                                            foreach (IFCAnyHandle before in beforeOpenings)
+                                                afterOpenings.Remove(before);
+                                            foreach (IFCAnyHandle potentiallyBadOpening in afterOpenings)
+                                            {
+                                                PotentiallyCorrectOpeningOrientationAndOpeningType(potentiallyBadOpening, localPlacement, scaledWidth);
+                                            }
+                                        }
                                     }
                                 }
 
