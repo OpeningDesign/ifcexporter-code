@@ -125,7 +125,26 @@ namespace BIM.IFC.Exporter
             InitPropertySetWallCommon(commonPropertySets);
             InitPropertySetWindowCommon(commonPropertySets);
 
-            // Space property sets.
+            // MEP common property set
+            InitPropertySetDistributionFlowElementCommon(commonPropertySets);
+
+            // Building property sets.
+            InitPropertySetBuildingCommon(commonPropertySets, fileVersion);
+            InitPropertySetBuildingWaterStorage(commonPropertySets);
+
+            // Proxy property sets.
+            InitPropertySetElementShading(commonPropertySets);
+
+            // Level property sets.
+            InitPropertySetLevelCommon(commonPropertySets, fileVersion);
+
+            // Site property sets.
+            InitPropertySetSiteCommon(commonPropertySets);
+
+            // Building Element Proxy
+            InitPropertySetBuildingElementProxyCommon(commonPropertySets);
+
+            // Space
             InitPropertySetSpaceCommon(commonPropertySets, fileVersion);
             InitPropertySetSpaceFireSafetyRequirements(commonPropertySets);
             InitPropertySetSpaceLightingRequirements(commonPropertySets);
@@ -972,6 +991,24 @@ namespace BIM.IFC.Exporter
         }
 
         /// <summary>
+        /// Create Pset_DistributionFlowElementCommon
+        /// </summary>
+        /// <param name="commonPropertySets"></param>
+        private static void InitPropertySetDistributionFlowElementCommon(IList<PropertySetDescription> commonPropertySets)
+        {
+            //property building element proxy common
+            PropertySetDescription propertySetDistributionFlowElementCommon = new PropertySetDescription();
+            propertySetDistributionFlowElementCommon.Name = "Pset_DistributionFlowElementCommon";
+            propertySetDistributionFlowElementCommon.EntityTypes.Add(IFCEntityType.IfcDistributionFlowElement);
+
+            PropertySetEntry ifcPSE = PropertySetEntryUtil.CreateReferenceEntry();
+            propertySetDistributionFlowElementCommon.AddEntry(ifcPSE);
+
+            commonPropertySets.Add(propertySetDistributionFlowElementCommon);
+
+        }
+
+        /// <summary>
         /// Initializes common space property sets.
         /// </summary>
         /// <param name="commonPropertySets">List to store property sets.</param>
@@ -1536,7 +1573,223 @@ namespace BIM.IFC.Exporter
 
             baseQuantities.Add(ifcBaseQuantity);
         }
-        
+
+        /// <summary>
+        /// Initializes Building Storey base quantity
+        /// </summary>
+        /// <param name="baseQuantities"></param>
+        private static void InitBuildingStoreyBaseQuantities(IList<QuantityDescription> baseQuantities)
+        {
+            QuantityDescription ifcBaseQuantity = new QuantityDescription();
+            ifcBaseQuantity.Name = "BaseQuantities";
+            ifcBaseQuantity.EntityTypes.Add(IFCEntityType.IfcBuildingStorey);
+
+            QuantityEntry ifcQE = new QuantityEntry("NetHeight");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitParameterName = "IfcQtyNetHeight";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("GrossHeight");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitParameterName = "IfcQtyGrossHeight";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ExportOptionsCache exportOptionsCache = ExporterCacheManager.ExportOptionsCache;
+            if (String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView") != 0)   // FMHandOver view exclude NetArea, GrossArea, NetVolume and GrossVolumne
+            {
+                ifcQE = new QuantityEntry("NetFloorArea");
+                ifcQE.QuantityType = QuantityType.Area;
+                ifcQE.PropertyCalculator = SpaceLevelAreaCalculator.Instance;
+                ifcBaseQuantity.AddEntry(ifcQE);
+
+                ifcQE = new QuantityEntry("GrossFloorArea");
+                ifcQE.QuantityType = QuantityType.Area;
+                ifcQE.PropertyCalculator = SpaceLevelAreaCalculator.Instance;
+                ifcBaseQuantity.AddEntry(ifcQE);
+
+                ifcQE = new QuantityEntry("GrossPerimeter");
+                ifcQE.QuantityType = QuantityType.PositiveLength;
+                ifcQE.RevitParameterName = "IfcQtyGrossPerimeter";
+                ifcBaseQuantity.AddEntry(ifcQE);
+
+                ifcQE = new QuantityEntry("NetVolume");
+                ifcQE.QuantityType = QuantityType.Volume;
+                ifcQE.RevitParameterName = "IfcQtyNetVolume";
+                ifcBaseQuantity.AddEntry(ifcQE);
+
+                ifcQE = new QuantityEntry("GrossVolume");
+                ifcQE.QuantityType = QuantityType.Volume;
+                ifcQE.RevitParameterName = "IfcQtyGrossVolume";
+                ifcBaseQuantity.AddEntry(ifcQE);
+            }
+
+            baseQuantities.Add(ifcBaseQuantity);
+        }
+
+        /// <summary>
+        /// Initializes Space base quantity
+        /// </summary>
+        /// <param name="baseQuantities"></param>
+        private static void InitSpaceBaseQuantities(IList<QuantityDescription> baseQuantities)
+        {
+            QuantityDescription ifcBaseQuantity = new QuantityDescription();
+            ifcBaseQuantity.Name = "BaseQuantities";
+            ifcBaseQuantity.EntityTypes.Add(IFCEntityType.IfcSpace);
+
+            QuantityEntry ifcQE = new QuantityEntry("NetFloorArea");
+            ifcQE.MethodOfMeasurement = "area measured in geometry";
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.PropertyCalculator = SpaceAreaCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("FinishCeilingHeight");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitParameterName = "IfcQtyFinishCeilingHeight";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("NetCeilingArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyNetCeilingArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("GrossCeilingArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyGrossCeilingArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("NetWallArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyNetWallArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("GrossWallArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyGrossWallArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("Height");
+            ifcQE.MethodOfMeasurement = "length measured in geometry";
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.PropertyCalculator = SpaceHeightCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("NetPerimeter");
+            ifcQE.MethodOfMeasurement = "length measured in geometry";
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitParameterName = "IfcQtyNetPerimeter";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("GrossPerimeter");
+            ifcQE.MethodOfMeasurement = "length measured in geometry";
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.PropertyCalculator = SpacePerimeterCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("GrossFloorArea");
+            ifcQE.MethodOfMeasurement = "area measured in geometry";
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.PropertyCalculator = SpaceAreaCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ExportOptionsCache exportOptionsCache = ExporterCacheManager.ExportOptionsCache;
+            if (String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView") != 0)   // FMHandOver view exclude GrossVolumne, FinishFloorHeight
+            {
+                ifcQE = new QuantityEntry("GrossVolume");
+                ifcQE.MethodOfMeasurement = "volume measured in geometry";
+                ifcQE.QuantityType = QuantityType.Volume;
+                ifcQE.PropertyCalculator = SpaceVolumeCalculator.Instance;
+                ifcBaseQuantity.AddEntry(ifcQE);
+
+                ifcQE = new QuantityEntry("FinishFloorHeight");
+                ifcQE.QuantityType = QuantityType.PositiveLength;
+                ifcQE.RevitParameterName = "IfcQtyFinishFloorHeight";
+                ifcBaseQuantity.AddEntry(ifcQE);
+            }
+
+            baseQuantities.Add(ifcBaseQuantity);
+        }
+
+        /// <summary>
+        /// Initializes Covering base quantity
+        /// </summary>
+        /// <param name="baseQuantities"></param>
+        private static void InitCoveringBaseQuantities(IList<QuantityDescription> baseQuantities)
+        {
+            QuantityDescription ifcBaseQuantity = new QuantityDescription();
+            ifcBaseQuantity.Name = "BaseQuantities";
+            ifcBaseQuantity.EntityTypes.Add(IFCEntityType.IfcCovering);
+
+            QuantityEntry ifcQE = new QuantityEntry("GrossArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyGrossArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("NetArea");
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.RevitParameterName = "IfcQtyNetArea";
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            baseQuantities.Add(ifcBaseQuantity);
+        }
+
+        /// <summary>
+        /// Initializes Window base quantity
+        /// </summary>
+        /// <param name="baseQuantities"></param>
+        private static void InitWindowBaseQuantities(IList<QuantityDescription> baseQuantities)
+        {
+            QuantityDescription ifcBaseQuantity = new QuantityDescription();
+            ifcBaseQuantity.Name = "BaseQuantities";
+            ifcBaseQuantity.EntityTypes.Add(IFCEntityType.IfcWindow);
+
+            QuantityEntry ifcQE = new QuantityEntry("Height");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitBuiltInParameter = BuiltInParameter.WINDOW_HEIGHT;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("Width");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitBuiltInParameter = BuiltInParameter.WINDOW_WIDTH;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("Area");
+            ifcQE.MethodOfMeasurement = "area measured in geometry";
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.PropertyCalculator = WindowAreaCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            baseQuantities.Add(ifcBaseQuantity);
+        }
+
+        /// <summary>
+        /// Initializes Door base quantity
+        /// </summary>
+        /// <param name="baseQuantities"></param>
+        private static void InitDoorBaseQuantities(IList<QuantityDescription> baseQuantities)
+        {
+            QuantityDescription ifcBaseQuantity = new QuantityDescription();
+            ifcBaseQuantity.Name = "BaseQuantities";
+            ifcBaseQuantity.EntityTypes.Add(IFCEntityType.IfcDoor);
+
+            QuantityEntry ifcQE = new QuantityEntry("Height");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitBuiltInParameter = BuiltInParameter.DOOR_HEIGHT;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("Width");
+            ifcQE.QuantityType = QuantityType.PositiveLength;
+            ifcQE.RevitBuiltInParameter = BuiltInParameter.DOOR_WIDTH;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            ifcQE = new QuantityEntry("Area");
+            ifcQE.MethodOfMeasurement = "area measured in geometry";
+            ifcQE.QuantityType = QuantityType.Area;
+            ifcQE.PropertyCalculator = DoorAreaCalculator.Instance;
+            ifcBaseQuantity.AddEntry(ifcQE);
+
+            baseQuantities.Add(ifcBaseQuantity);
+        }
+
         /// <summary>
         /// Initializes base quantities.
         /// </summary>
@@ -1549,6 +1802,12 @@ namespace BIM.IFC.Exporter
             InitRailingBaseQuantities(baseQuantities);
             InitSlabBaseQuantities(baseQuantities);
             InitRampFlightBaseQuantities(baseQuantities);
+            InitBuildingStoreyBaseQuantities(baseQuantities);
+            InitSpaceBaseQuantities(baseQuantities);
+            InitCoveringBaseQuantities(baseQuantities);
+            InitWindowBaseQuantities(baseQuantities);
+            InitDoorBaseQuantities(baseQuantities);
+
             quantities.Add(baseQuantities);
         }
 

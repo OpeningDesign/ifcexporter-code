@@ -284,10 +284,14 @@ namespace BIM.IFC.Exporter
                 {
                     ExportElementImpl(exporterIFC, element, filterView, productWrapper);
 
+                    // Export PropertySet, Quantity (if set) and Classification (or Uniformat for COBIE) here
                     ExportElementProperties(exporterIFC, element, productWrapper);
-                    ExportElementQuantities(exporterIFC, element, productWrapper);
+                    if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE))
+                        ExportElementQuantities(exporterIFC, element, productWrapper);
+                    ExportElementClassifications(exporterIFC, element, productWrapper);                     // Exporting ClassificationCode from IFC parameter 
                     if (ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE)
-                        ExportElementClassifications(exporterIFC, element, productWrapper);
+                        ExportElementUniformatClassifications(exporterIFC, element, productWrapper);
+
                 }
 
                 // We are going to clear the parameter cache for the element (not the type) after the export.
@@ -658,7 +662,7 @@ namespace BIM.IFC.Exporter
                     {
                     }
                 }
-
+                
                 IFCAnyHandle buildingAddress = CreateIFCAddress(file, document, projInfo);
 
                 IFCAnyHandle buildingHandle = IFCInstanceExporter.CreateBuilding(file,
@@ -791,6 +795,17 @@ namespace BIM.IFC.Exporter
                     }
 
                     ii += coincidentLevels.Count;
+
+                    // Add Property set, quantities and classification of Building Storey also to IFC
+                    ProductWrapper productWrapper = ProductWrapper.Create(exporterIFC, false);
+                    productWrapper.AddElement(levelInfo.GetBuildingStorey(), levelInfo, null, false);
+
+                    // Create Quantities (if set) and Classification for Levels (Building Stories) here 
+                    // ExportElementProperties(exporterIFC, level, productWrapper);     // PSet creation is done somewhere else (?), so skip it here
+                    if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE))
+                        ExportElementQuantities(exporterIFC, level, productWrapper);
+                    ExportElementClassifications(exporterIFC, level, productWrapper); 
+
                 }
                 transaction.Commit();
             }
@@ -1120,9 +1135,9 @@ namespace BIM.IFC.Exporter
                 else
                 {
                     string currentLine;
-                    bool exportFMHandOverView = String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView") == 0;
+                    int exportFMHandOverView = String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView");
 
-                    if (exportFMHandOverView)
+                    if (exportFMHandOverView == 0)
                     {
                         currentLine = string.Format("ViewDefinition [{0}{1}{2}{3}]",
                            coordinationView,
@@ -1180,6 +1195,7 @@ namespace BIM.IFC.Exporter
                     organization.Add(String.Empty);
 
                 string versionInfos = document.Application.VersionBuild + " - " + ExporterCacheManager.ExportOptionsCache.ExporterVersion + " - " + ExporterCacheManager.ExportOptionsCache.ExporterUIVersion;
+
                 IFCInstanceExporter.CreateFileName(file, projectNumber, author, organization, document.Application.VersionName,
                     versionInfos, fHItem.Authorization);
 
@@ -1489,7 +1505,7 @@ namespace BIM.IFC.Exporter
         /// <param name="exporterIFC">The IFC exporter object.</param>
         /// <param name="element">The element whose classifications are exported.</param>
         /// <param name="productWrapper">The ProductWrapper object.</param>
-        internal void ExportElementClassifications(ExporterIFC exporterIFC, Element element, ProductWrapper productWrapper)
+        internal void ExportElementUniformatClassifications(ExporterIFC exporterIFC, Element element, ProductWrapper productWrapper)
         {
             if (productWrapper.IsEmpty())
                 return;
@@ -1502,6 +1518,25 @@ namespace BIM.IFC.Exporter
                 {
                     if (IFCAnyHandleUtil.IsSubTypeOf(prodHnd, IFCEntityType.IfcElement))
                         ClassificationUtil.CreateUniformatClassification(exporterIFC, file, element, prodHnd);
+                }
+                transaction.Commit();
+            }
+        }
+
+        internal void ExportElementClassifications(ExporterIFC exporterIFC, Element element, ProductWrapper productWrapper)
+        {
+            if (productWrapper.IsEmpty())
+                return;
+
+            IFCFile file = exporterIFC.GetFile();
+            using (IFCTransaction transaction = new IFCTransaction(file))
+            {
+                ICollection<IFCAnyHandle> productSet = productWrapper.GetAllObjects();
+                foreach (IFCAnyHandle prodHnd in productSet)
+                {
+                    // No need to check the subtype since Classification can be assigned to IfcRoot
+                    // if (IFCAnyHandleUtil.IsSubTypeOf(prodHnd, IFCEntityType.IfcElement))
+                        ClassificationUtil.CreateClassification(exporterIFC, file, element, prodHnd, "");
                 }
                 transaction.Commit();
             }
@@ -1784,25 +1819,30 @@ namespace BIM.IFC.Exporter
                         addressLines.Add(savedAddressItem.AddressLine2);
                 }
 
-                IFCAddressType? addressPurpose = null;
+                IFCAddressType addressPurpose = IFCAddressType.UserDefined;     // set this as default value
+                if (String.Compare(savedAddressItem.Purpose, "OFFICE", true) == 0)
+                    addressPurpose = Toolkit.IFCAddressType.Office;
+                else if (String.Compare(savedAddressItem.Purpose, "SITE", true) == 0)
+                    addressPurpose = Toolkit.IFCAddressType.Site;
+                else if (String.Compare(savedAddressItem.Purpose, "HOME", true) == 0)
+                    addressPurpose = Toolkit.IFCAddressType.Home;
+                else if (String.Compare(savedAddressItem.Purpose, "DISTRIBUTIONPOINT", true) == 0)
+                    addressPurpose = Toolkit.IFCAddressType.DistributionPoint;
+                else if (String.Compare(savedAddressItem.Purpose, "USERDEFINED", true) == 0)
+                    addressPurpose = Toolkit.IFCAddressType.UserDefined;
+
                 if (!String.IsNullOrEmpty(savedAddressItem.Purpose))
                 {
-                    addressPurpose = IFCAddressType.UserDefined;     // set this as default value
-                    if (String.Compare(savedAddressItem.Purpose, "OFFICE", true) == 0)
-                        addressPurpose = Toolkit.IFCAddressType.Office;
-                    else if (String.Compare(savedAddressItem.Purpose, "SITE", true) == 0)
-                        addressPurpose = Toolkit.IFCAddressType.Site;
-                    else if (String.Compare(savedAddressItem.Purpose, "HOME", true) == 0)
-                        addressPurpose = Toolkit.IFCAddressType.Home;
-                    else if (String.Compare(savedAddressItem.Purpose, "DISTRIBUTIONPOINT", true) == 0)
-                        addressPurpose = Toolkit.IFCAddressType.DistributionPoint;
-                    else if (String.Compare(savedAddressItem.Purpose, "USERDEFINED", true) == 0)
-                        addressPurpose = Toolkit.IFCAddressType.UserDefined;
+                    postalAddress = IFCInstanceExporter.CreatePostalAddress(file, addressPurpose, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
+                       savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
+                       savedAddressItem.Country);
                 }
-                
-                postalAddress = IFCInstanceExporter.CreatePostalAddress(file, addressPurpose, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
-                    savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
-                    savedAddressItem.Country);
+                else
+                {
+                    postalAddress = IFCInstanceExporter.CreatePostalAddress(file, null, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
+                       savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
+                       savedAddressItem.Country);
+                }
 
                 return postalAddress;
 

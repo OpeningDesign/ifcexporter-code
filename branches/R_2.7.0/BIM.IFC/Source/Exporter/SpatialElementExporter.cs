@@ -988,22 +988,27 @@ namespace BIM.IFC.Exporter
                     extraParams.ScaledHeight = roomHeight;
                     extraParams.ScaledArea = dArea;
 
-
                     string spatialElementName = NamingUtil.GetNameOverride(spatialElement, name);
                     string spatialElementDescription = NamingUtil.GetDescriptionOverride(spatialElement, desc);
                     string spatialElementObjectType = NamingUtil.GetObjectTypeOverride(spatialElement, null);
 
-                    double? spaceElevationWithFlooring = null;
-                    double elevationWithFlooring = 0.0;
-                    if (ParameterUtil.GetDoubleValueFromElement(spatialElement, "ElevationWithFlooring", out elevationWithFlooring) == true)
-                        spaceElevationWithFlooring = elevationWithFlooring;
-
-                    spaceHnd = IFCInstanceExporter.CreateSpace(file, GUIDUtil.CreateGUID(spatialElement),
-                                                  exporterIFC.GetOwnerHistoryHandle(),
-                                                  spatialElementName, spatialElementDescription, spatialElementObjectType,
-                                                  extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
-                                                  internalOrExternal, spaceElevationWithFlooring);
-
+                    double spaceElevationWithFlooring = 0.0;
+                    if (ParameterUtil.GetDoubleValueFromElement(spatialElement, "IfcElevationWithFlooring", out spaceElevationWithFlooring) == true)
+                    {
+                        spaceHnd = IFCInstanceExporter.CreateSpace(file, GUIDUtil.CreateGUID(spatialElement),
+                                                      exporterIFC.GetOwnerHistoryHandle(),
+                                                      spatialElementName,spatialElementDescription, spatialElementObjectType,
+                                                      extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
+                                                      internalOrExternal, spaceElevationWithFlooring);
+                    }
+                    else
+                    {
+                        spaceHnd = IFCInstanceExporter.CreateSpace(file, ExporterIFCUtils.CreateGUID(spatialElement),
+                                                      exporterIFC.GetOwnerHistoryHandle(),
+                                                      spatialElementName, spatialElementDescription, spatialElementObjectType,
+                                                      extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
+                                                      internalOrExternal, null);
+                    }
                     transaction2.Commit();
                 }
 
@@ -1014,6 +1019,9 @@ namespace BIM.IFC.Exporter
             ExporterCacheManager.SpatialElementHandleCache.Register(spatialElement.Id, spaceHnd);
             exporterIFC.RegisterSpatialElementHandle(spatialElement.Id, spaceHnd);
 
+            // Find Ceiling as a Space boundary and keep the relationship in a cache for use later
+            Boolean ret = getCeilingSpaceBoundary(spatialElement);
+
             if (!MathUtil.IsAlmostZero(dArea) && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE) &&
                 !ExporterCacheManager.ExportOptionsCache.ExportAs2x3CoordinationView2 && !ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities)
             {
@@ -1023,13 +1031,67 @@ namespace BIM.IFC.Exporter
             // Export BaseQuantities for SpatialElement
             if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE))
             {
-                ExporterIFCUtils.CreateNonCOBIERoomQuantities(exporterIFC, spaceHnd, spatialElement, dArea, roomHeight);
+                // Skip this step. The "standard" quantities will be exported at the end of export element process in exportElement (Exporter.cs)
+                // ExporterIFCUtils.CreateNonCOBIERoomQuantities(exporterIFC, spaceHnd, spatialElement, dArea, roomHeight);
             }
+
+            // Create general classification for Spatial element from ClassificationCode(s). This is not done here but rather at the end of exportElement process
+            // ClassificationUtil.CreateClassification(exporterIFC, file, spatialElement, spaceHnd, "");
 
             // Export Classifications for SpatialElement for GSA/COBIE.
             if (ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE)
             {
                 CreateCOBIESpaceClassifications(exporterIFC, file, spaceHnd, document.ProjectInformation, spatialElement);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Collect relationship information from Ceiling to Room to be used later to determine whether a Ceiling can be contained in a Room
+        /// </summary>
+        /// <param name="spatialElement">The revit spatial object to process</param>
+        /// <returns></returns>
+        static private bool getCeilingSpaceBoundary(SpatialElement spatialElement)
+        {
+            // Represents the criteria for boundary elements to be considered bounding Ceiling
+            LogicalOrFilter categoryFilter = new LogicalOrFilter(new ElementCategoryFilter(BuiltInCategory.OST_Ceilings),
+                                                        new ElementCategoryFilter(BuiltInCategory.OST_Ceilings));
+
+            SpatialElementGeometryCalculator calculator = new SpatialElementGeometryCalculator(spatialElement.Document);
+            SpatialElementGeometryResults results = calculator.CalculateSpatialElementGeometry((SpatialElement)spatialElement);
+            Solid geometry = results.GetGeometry();
+
+            // Go through the boundary faces to identify whether it is bounded by a Ceiling. If it is Ceiling, add into the Cache
+            foreach (Face face in geometry.Faces)
+            {
+                IList<SpatialElementBoundarySubface> boundaryFaces = results.GetBoundaryFaceInfo(face);
+                foreach (SpatialElementBoundarySubface boundaryFace in boundaryFaces)
+                {
+                    // Get boundary element
+                    LinkElementId boundaryElementId = boundaryFace.SpatialBoundaryElement;
+
+                    // Only considering local file room bounding elements
+                    ElementId localElementId = boundaryElementId.HostElementId;
+                    // Evaluate if element meets criteria using PassesFilter()
+                    if (localElementId != ElementId.InvalidElementId && categoryFilter.PassesFilter(spatialElement.Document, localElementId))
+                    {
+                        if (ExporterCacheManager.CeilingSpaceRelCache.ContainsKey(localElementId))
+                        {
+                            // The ceiling already exists in the Dictionary, add the Space into list
+                            IList<ElementId> roomlist = ExporterCacheManager.CeilingSpaceRelCache[localElementId];
+                            roomlist.Add(spatialElement.Id);
+                        }
+                        else
+                        {
+                            // The first time this Ceiling Id appears
+                            IList<ElementId> roomlist = new List<ElementId>();
+                            roomlist.Add(spatialElement.Id);
+                            ExporterCacheManager.CeilingSpaceRelCache.Add(localElementId, roomlist);
+                        }
+
+                    }
+                }
             }
 
             return true;

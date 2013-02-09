@@ -274,6 +274,11 @@ namespace BIM.IFC.Utility
         static IDictionary<ElementId, IFCAnyHandle> m_WallTypeCache;
 
         /// <summary>
+        /// Keeps relationship of Ceiling to the Space(s) where it belongs to. Used to determine Space containment for Ceiling object that is fully contained in Space (for FMHandOverView)
+        /// </summary>
+        static IDictionary<ElementId, IList<ElementId>> m_CeilingSpaceRelCache;
+
+        /// <summary>
         /// The ParameterCache object.
         /// </summary>
         public static AllocatedGeometryObjectCache AllocatedGeometryObjectCache
@@ -873,6 +878,19 @@ namespace BIM.IFC.Utility
         }
 
         /// <summary>
+        /// Ceiling and Space relationship cache. We need it to check whether a Ceiling should be contained in a Space later on when exporting Ceiling
+        /// </summary>
+        public static IDictionary<ElementId, IList<ElementId>> CeilingSpaceRelCache
+        {
+            get
+            {
+                if (m_CeilingSpaceRelCache == null)
+                    m_CeilingSpaceRelCache = new Dictionary<ElementId, IList<ElementId>>();
+                return m_CeilingSpaceRelCache;
+            }
+        }
+
+        /// <summary>
         /// Clear all caches contained in this manager.
         /// </summary>
         public static void Clear()
@@ -923,6 +941,7 @@ namespace BIM.IFC.Utility
             m_WallTypeCache = null;
             m_UnitsCache = null;
             m_ZoneInfoCache = null;
+            m_CeilingSpaceRelCache = null;
         }
     }
 }

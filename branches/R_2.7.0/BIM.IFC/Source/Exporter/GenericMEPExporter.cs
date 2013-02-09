@@ -85,10 +85,10 @@ namespace BIM.IFC.Exporter
                             string typeGUID = GUIDUtil.CreateGUID(type);
                             string typeName = NamingUtil.GetNameOverride(type, NamingUtil.GetIFCName(type));
                             string typeObjectType = NamingUtil.GetObjectTypeOverride(type, NamingUtil.CreateIFCObjectName(exporterIFC, type));
-                            string applicableOccurence = NamingUtil.GetOverrideStringValue(type, "ApplicableOccurrence", typeObjectType);
+                            string applicableOccurence = NamingUtil.GetOverrideStringValue(type, "IfcApplicableOccurrence", typeObjectType);
                             string typeDescription = NamingUtil.GetDescriptionOverride(type, null);
                             string typeTag = NamingUtil.GetTagOverride(type, NamingUtil.CreateIFCElementId(type));
-                            string typeElementType = NamingUtil.GetOverrideStringValue(type, "ElementType", typeName);
+                            string typeElementType = NamingUtil.GetOverrideStringValue(type, "IfcElementType", typeName);
 
                             HashSet<IFCAnyHandle> propertySetsOpt = new HashSet<IFCAnyHandle>();
                             IList<IFCAnyHandle> repMapListOpt = new List<IFCAnyHandle>();

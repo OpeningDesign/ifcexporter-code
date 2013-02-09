@@ -212,7 +212,8 @@ namespace BIM.IFC.Exporter
                         string instanceLongName = NamingUtil.GetLongNameOverride(doc.ProjectInformation, NamingUtil.GetLongNameOverride(element, null));
                         string instanceDescription = NamingUtil.GetDescriptionOverride(element, null);
                         string instanceObjectType = NamingUtil.GetObjectTypeOverride(element, objectType);
-                        string siteLandTitleNumber = NamingUtil.GetOverrideStringValue(element, "LandTitleNumber", null);
+                        string siteLandTitleNumber = NamingUtil.GetOverrideStringValue(element, "IfcLandTitleNumber", null);
+
 
                         siteHandle = IFCInstanceExporter.CreateSite(file, instanceGUID, ownerHistory, siteName, instanceDescription, instanceObjectType, localPlacement,
                            siteRepresentation, instanceLongName, Toolkit.IFCElementComposition.Element, latitude, longitude, elevation, siteLandTitleNumber, null);

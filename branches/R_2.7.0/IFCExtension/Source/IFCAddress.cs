@@ -59,7 +59,7 @@ namespace Revit.IFC.Common.Extensions
             {
                 SchemaBuilder addressBuilder = new SchemaBuilder(s_schemaId);
                 addressBuilder.SetSchemaName("IFCAddress");
-                addressBuilder.AddMapField(s_addressMapField, typeof(String), typeof(String));
+                addressBuilder.AddMapField(s_addressMapField, typeof(String), typeof(String)); 
                 m_schema = addressBuilder.Finish();
             }
         }
@@ -197,5 +197,3 @@ namespace Revit.IFC.Common.Extensions
         }
     }
 }
-
-

@@ -1138,8 +1138,8 @@ namespace BIM.IFC.Exporter
             string elemName = NamingUtil.GetNameOverride(elementType, NamingUtil.GetIFCName(elementType));
             string elemDesc = NamingUtil.GetDescriptionOverride(elementType, null);
             string elemTag = NamingUtil.GetTagOverride(elementType, NamingUtil.CreateIFCElementId(elementType));
-            string elemApplicableOccurence = NamingUtil.GetOverrideStringValue(elementType, "ApplicableOccurence", null);
-            string elemElementType = NamingUtil.GetOverrideStringValue(elementType, "ElementType", null);
+            string elemApplicableOccurence = NamingUtil.GetOverrideStringValue(elementType, "IfcApplicableOccurence", null);
+            string elemElementType = NamingUtil.GetOverrideStringValue(elementType, "IfcElementType", null);
 
             HashSet<IFCAnyHandle> propertySets = null;
             if (ExporterCacheManager.ExportOptionsCache.PropertySetOptions.ExportInternalRevit)
