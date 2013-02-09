@@ -419,7 +419,7 @@ namespace BIM.IFC.Exporter
                 case IFCExportType.ExportPlateType:
                     {
                         elemIdToUse = NamingUtil.GetTagOverride(instance, NamingUtil.CreateIFCElementId(instance));
-                        instanceElementType = NamingUtil.GetOverrideStringValue(instance, "ElementType", typeName);
+                        instanceElementType = NamingUtil.GetOverrideStringValue(instance, "IfcElementType", typeName);
                         break;
                     }
             }
@@ -431,6 +431,7 @@ namespace BIM.IFC.Exporter
                 Exporter.CreateElementTypeProperties(exporterIFC, symbol, propertySets, typeHandle);
             
             return typeHandle;
+
         }
 
         /// <summary>

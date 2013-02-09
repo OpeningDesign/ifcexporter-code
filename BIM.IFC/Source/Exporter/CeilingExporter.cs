@@ -141,14 +141,12 @@ namespace BIM.IFC.Exporter
                             BodyExporterOptions bodyExporterOptions = new BodyExporterOptions(true);
                             prodRep = RepresentationUtil.CreateAppropriateProductDefinitionShape(exporterIFC, element,
                                 categoryId, geomElem, bodyExporterOptions, null, ecData);
-
                             if (IFCAnyHandleUtil.IsNullOrHasNoValue(prodRep))
                             {
                                 ecData.ClearOpenings();
                                 return;
                             }
                         }
-
                         string instanceGUID = GUIDUtil.CreateGUID(element);
                         string instanceName = NamingUtil.GetIFCName(element);
                         string instanceDescription = NamingUtil.GetDescriptionOverride(element, null);
@@ -163,8 +161,40 @@ namespace BIM.IFC.Exporter
                         {
                             PartExporter.ExportHostPart(exporterIFC, element, covering, productWrapper, setter, setter.GetPlacement(), null);
                         }
-                        
-                        productWrapper.AddElement(covering, setter, null, LevelUtil.AssociateElementToLevel(element));
+
+                        Boolean containInSpace = false;
+                        IFCAnyHandle localPlacementToUse = setter.GetPlacement();
+
+                        // Assign ceiling to room/IfcSpace if it is bounding a single Room for FMHandOver view only
+                        ExportOptionsCache exportOptionsCache = ExporterCacheManager.ExportOptionsCache;
+                        if (String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView") == 0)
+                        {
+                            if (ExporterCacheManager.CeilingSpaceRelCache.ContainsKey(element.Id))
+                            {
+                                IList<ElementId> roomlist = ExporterCacheManager.CeilingSpaceRelCache[element.Id];
+
+                                // Process Ceiling to be contained in a Space only when it is exactly bounding one Space
+                                if (roomlist.Count == 1)
+                                {
+                                    productWrapper.AddElement(covering, setter, null, false);
+
+                                    // Modify the Ceiling placement to be relative to the Space that it bounds 
+                                    IFCAnyHandle roomPlacement = IFCAnyHandleUtil.GetObjectPlacement(ExporterCacheManager.SpatialElementHandleCache.Find(roomlist[0]));
+                                    Transform relTrf = ExporterIFCUtils.GetRelativeLocalPlacementOffsetTransform(roomPlacement, localPlacementToUse);
+                                    Transform inverseTrf = relTrf.Inverse;
+                                    IFCAnyHandle relLocalPlacement = ExporterUtil.CreateAxis2Placement3D(file, inverseTrf.Origin, inverseTrf.BasisZ, inverseTrf.BasisX);
+                                    IFCAnyHandleUtil.SetAttribute(localPlacementToUse, "PlacementRelTo", roomPlacement);
+                                    GeometryUtil.SetRelativePlacement(localPlacementToUse, relLocalPlacement);
+
+                                    exporterIFC.RelateSpatialElement(roomlist[0], covering);
+                                    containInSpace = true;
+                                }
+                            }
+                        }
+
+                        // if not contained in Space, assign it to default containment in Level
+                        if (!containInSpace)
+                            productWrapper.AddElement(covering, setter, null, LevelUtil.AssociateElementToLevel(element));
 
                         if (!exportParts)
                         {

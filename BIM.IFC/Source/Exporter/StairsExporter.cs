@@ -51,8 +51,8 @@ namespace BIM.IFC.Exporter
                 string stringerTypeName = NamingUtil.GetNameOverride(stringerType, NamingUtil.GetIFCName(stringerType));
                 string stringerTypeDescription = NamingUtil.GetDescriptionOverride(stringerType, null);
                 string stringerTypeTag = NamingUtil.GetTagOverride(stringerType, NamingUtil.CreateIFCElementId(stringerType));
-                string stringerApplicableOccurence = NamingUtil.GetOverrideStringValue(stringerType, "ApplicableOccurence", null);
-                string stringerElementType = NamingUtil.GetOverrideStringValue(stringerType, "ElementType", null);
+                string stringerApplicableOccurence = NamingUtil.GetOverrideStringValue(stringerType, "IfcApplicableOccurence", null);
+                string stringerElementType = NamingUtil.GetOverrideStringValue(stringerType, "IfcElementType", null);
 
                 memberType = IFCInstanceExporter.CreateMemberType(file, stringerTypeGUID,
                     ownerHistory, stringerTypeName, stringerTypeDescription, stringerApplicableOccurence, null, null, stringerTypeTag,

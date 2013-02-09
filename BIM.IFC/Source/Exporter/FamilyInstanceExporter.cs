@@ -398,9 +398,9 @@ namespace BIM.IFC.Exporter
 
                     string gentypeName = NamingUtil.GetNameOverride(familySymbol, revitObjectType);
                     string gentypeDescription = NamingUtil.GetDescriptionOverride(familySymbol, null);
-                    string gentypeApplicableOccurrence = NamingUtil.GetOverrideStringValue(familySymbol, "ApplicableOccurrence", null);
+                    string gentypeApplicableOccurrence = NamingUtil.GetOverrideStringValue(familySymbol, "IfcApplicableOccurrence", null);
                     string gentypeTag = NamingUtil.GetTagOverride(familySymbol, symId);
-                    string gentypeElementType = NamingUtil.GetOverrideStringValue(familySymbol, "ElementType", revitObjectType);
+                    string gentypeElementType = NamingUtil.GetOverrideStringValue(familySymbol, "IfcElementType", revitObjectType);
 
                     // This covers many generic types.  If we can't find it in the list here, do custom exports.
                     IFCAnyHandle typeStyle = FamilyExporterUtil.ExportGenericType(exporterIFC, exportType, ifcEnumType, guid,
@@ -417,7 +417,8 @@ namespace BIM.IFC.Exporter
                                 {
                                     string columnType = "Column";
                                     typeStyle = IFCInstanceExporter.CreateColumnType(file, guid, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
+                                        gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
+
                                        gentypeElementType, GetColumnType(familyInstance, columnType));
 
                                     break;
@@ -433,9 +434,9 @@ namespace BIM.IFC.Exporter
                                     propertySets.UnionWith(doorPanels);
 
                                     string doorStyleGUID = GUIDUtil.CreateSubElementGUID(originalFamilySymbol, (int)IFCDoorSubElements.DoorStyle);
-
+                                    string doorStyleTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateDoorStyle(file, doorStyleGUID, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, doorStyleTag,
                                        DoorWindowUtil.GetDoorStyleOperation(doorWindowInfo.DoorOperationType),
                                        DoorWindowUtil.GetDoorStyleConstruction(familyInstance),
                                        paramTakesPrecedence, sizeable);
@@ -443,9 +444,11 @@ namespace BIM.IFC.Exporter
                                 }
                             case IFCExportType.ExportSystemFurnitureElementType:
                                 {
+                                    string furnitureTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateSystemFurnitureElementType(file, guid, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, furnitureTag,
                                        gentypeElementType);
+
                                     break;
                                 }
                             case IFCExportType.ExportWindowType:
@@ -463,8 +466,9 @@ namespace BIM.IFC.Exporter
 
                                     string windowStyleGUID = GUIDUtil.CreateSubElementGUID(originalFamilySymbol, (int)IFCWindowSubElements.WindowStyle);
 
+                                    string windowStyleTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateWindowStyle(file, windowStyleGUID, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, windowStyleTag,
                                        constructionType, operationType, paramTakesPrecedence, sizeable);
                                     break;
                                 }
@@ -494,6 +498,7 @@ namespace BIM.IFC.Exporter
                             typeInfo.ScaledOuterPerimeter = extraParams.ScaledOuterPerimeter;
                         }
 
+                        ClassificationUtil.CreateClassification(exporterIFC, file, originalFamilySymbol, typeStyle, "");        // Create other generic classification from ClassificationCode(s)
                         ClassificationUtil.CreateUniformatClassification(exporterIFC, file, originalFamilySymbol, typeStyle);
                     }
                 }
@@ -745,9 +750,9 @@ namespace BIM.IFC.Exporter
                                     IFCTransportElementType operationType = FamilyExporterUtil.GetTransportElementType(familyInstance);
 
                                     double capacityByWeight = 0.0;
-                                    ParameterUtil.GetDoubleValueFromElementOrSymbol(familyInstance, "CapacityByWeight", out capacityByWeight);
+                                    ParameterUtil.GetDoubleValueFromElementOrSymbol(familyInstance, "IfcCapacityByWeight", out capacityByWeight);
                                     double capacityByNumber = 0.0;
-                                    ParameterUtil.GetDoubleValueFromElementOrSymbol(familyInstance, "CapacityByNumber", out capacityByNumber);
+                                    ParameterUtil.GetDoubleValueFromElementOrSymbol(familyInstance, "IfcCapacityByNumber", out capacityByNumber);
 
                                     instanceHandle = IFCInstanceExporter.CreateTransportElement(file, instanceGUID, ownerHistory,
                                        instanceName, instanceDescription, instanceObjectType,
@@ -779,7 +784,7 @@ namespace BIM.IFC.Exporter
                                         if (FamilyExporterUtil.IsDistributionControlElementSubType(exportType))
                                         {
                                             string ifcelementType = null;
-                                            ParameterUtil.GetStringValueFromElement(familyInstance, "ElementType", out ifcelementType);
+                                            ParameterUtil.GetStringValueFromElement(familyInstance, "IfcElementType", out ifcelementType);
 
                                             instanceHandle = IFCInstanceExporter.CreateDistributionControlElement(file, instanceGUID,
                                                ownerHistory, instanceName, instanceDescription, instanceObjectType,

@@ -57,6 +57,8 @@
     <Compile Include="Exporter\PartExporter.cs" />
     <Compile Include="Exporter\PileExporter.cs" />
     <Compile Include="Exporter\PropertySet\Calculators\BeamLoadBearingCalculator.cs" />
+    <Compile Include="Exporter\PropertySet\Calculators\DoorAreaCalculator.cs" />
+    <Compile Include="Exporter\PropertySet\Calculators\WindowAreaCalculator.cs" />
     <Compile Include="Exporter\PropertySet\Calculators\ColumnLoadBearingCalculator.cs" />
     <Compile Include="Exporter\PropertySet\Calculators\CoveringFinishCalculator.cs" />
     <Compile Include="Exporter\PropertySet\Calculators\BeamSlopeCalculator.cs" />
