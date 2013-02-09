@@ -125,9 +125,6 @@ namespace BIM.IFC.Exporter
             InitPropertySetWallCommon(commonPropertySets);
             InitPropertySetWindowCommon(commonPropertySets);
 
-            // MEP common property set
-            InitPropertySetDistributionFlowElementCommon(commonPropertySets);
-
             // Building property sets.
             InitPropertySetBuildingCommon(commonPropertySets, fileVersion);
             InitPropertySetBuildingWaterStorage(commonPropertySets);
@@ -425,24 +422,6 @@ namespace BIM.IFC.Exporter
             commonPropertySets.Add(propertySetLightFixtureTypeCommon);
         }
 
-        /// <summary>
-        /// Initializes the PSet_DistributionFlowElementCommon property set.
-        /// </summary>
-        /// <param name="commonPropertySets">List to store property sets.</param>
-        private static void InitPropertySetDistributionFlowElementCommon(IList<PropertySetDescription> commonPropertySets)
-        {
-            //property beam common
-            PropertySetDescription propertyDistributionFlowElementCommon = new PropertySetDescription();
-            propertyDistributionFlowElementCommon.Name = "PSet_DistributionFlowElementCommon";
-            propertyDistributionFlowElementCommon.SubElementIndex = (int)IFCDistributionFlowElementSubElements.PSetDistributionFlowElementCommon;
-
-            propertyDistributionFlowElementCommon.EntityTypes.Add(IFCEntityType.IfcDistributionFlowElement);
-
-            PropertySetEntry ifcPSE = PropertySetEntryUtil.CreateReferenceEntry();
-            propertyDistributionFlowElementCommon.AddEntry(ifcPSE);
-
-            commonPropertySets.Add(propertyDistributionFlowElementCommon);
-        }
 
         /// <summary>
         /// Initializes the PSet_DistributionFlowElementCommon property set.
@@ -991,22 +970,24 @@ namespace BIM.IFC.Exporter
         }
 
         /// <summary>
-        /// Create Pset_DistributionFlowElementCommon
+        /// Initializes the PSet_DistributionFlowElementCommon property set.
         /// </summary>
-        /// <param name="commonPropertySets"></param>
+        /// <param name="commonPropertySets">List to store property sets.</param>
         private static void InitPropertySetDistributionFlowElementCommon(IList<PropertySetDescription> commonPropertySets)
         {
-            //property building element proxy common
-            PropertySetDescription propertySetDistributionFlowElementCommon = new PropertySetDescription();
-            propertySetDistributionFlowElementCommon.Name = "Pset_DistributionFlowElementCommon";
-            propertySetDistributionFlowElementCommon.EntityTypes.Add(IFCEntityType.IfcDistributionFlowElement);
+            //property beam common
+            PropertySetDescription propertyDistributionFlowElementCommon = new PropertySetDescription();
+            propertyDistributionFlowElementCommon.Name = "PSet_DistributionFlowElementCommon";
+            propertyDistributionFlowElementCommon.SubElementIndex = (int)IFCDistributionFlowElementSubElements.PSetDistributionFlowElementCommon;
+
+            propertyDistributionFlowElementCommon.EntityTypes.Add(IFCEntityType.IfcDistributionFlowElement);
 
             PropertySetEntry ifcPSE = PropertySetEntryUtil.CreateReferenceEntry();
-            propertySetDistributionFlowElementCommon.AddEntry(ifcPSE);
+            propertyDistributionFlowElementCommon.AddEntry(ifcPSE);
 
-            commonPropertySets.Add(propertySetDistributionFlowElementCommon);
-
+            commonPropertySets.Add(propertyDistributionFlowElementCommon);
         }
+
 
         /// <summary>
         /// Initializes common space property sets.
