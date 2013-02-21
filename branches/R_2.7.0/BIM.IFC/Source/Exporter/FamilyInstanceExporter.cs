@@ -711,8 +711,8 @@ namespace BIM.IFC.Exporter
                                     // only necessary when exporting as possible breps.
                                     OpeningUtil.CreateOpeningsIfNecessary(instanceHandle, familyInstance, extraParams, exporterIFC,
                                        placementToUse, setter, wrapper);
-                                    if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities)
-                                        ExporterIFCUtils.CreateDoorWindowBaseQuantities(exporterIFC, instanceHandle, height, width);
+                                    //if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities)
+                                    //    ExporterIFCUtils.CreateDoorWindowBaseQuantities(exporterIFC, instanceHandle, height, width);
 
                                     PropertyUtil.CreateInternalRevitPropertySets(exporterIFC, familyInstance, wrapper);
                                     break;

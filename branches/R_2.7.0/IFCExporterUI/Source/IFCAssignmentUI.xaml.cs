@@ -101,7 +101,7 @@ namespace BIM.IFC.Export.UI
         {
             m_newAddressItem.Purpose = (string)PurposeComboBox.SelectedItem;
             if (String.Compare(m_newAddressItem.Purpose, "USERDEFINED") != 0)
-                m_newAddressItem.UserDefinedPurpose = "";         // Set User Defined Purpose field to null if the Purpose is changed to other values
+                m_newAddressItem.UserDefinedPurpose = "";         // Set User Defined Purpose field to empty if the Purpose is changed to other values
         }
 
         /// <summary>
@@ -111,9 +111,6 @@ namespace BIM.IFC.Export.UI
         /// <param name="args"></param>
         private void buttonOK_Click(object sender, RoutedEventArgs args)
         {
-            // TO DO validation on mandatory fields also upon OK button
-            // if (classificationTabMandatoryItemCheck(sender, e) == false)
-            //    return;     // Do not continue if mandatory field validation is incorrect!
 
             // Saved changes to both Address Tab items and File Header Tab items if they have changed
 
@@ -199,7 +196,7 @@ namespace BIM.IFC.Export.UI
                 transaction.Commit();
             }
 
-            // Update CLassification if it has changed or the mandatory fields are filled. If mandatory fields are not filled (we are not supposed to arrive here in this case!) we will ignore the classification
+            // Update Classification if it has changed or the mandatory fields are filled. If mandatory fields are not filled (we are not supposed to arrive here in this case!) we will ignore the classification
             if (m_newClassification.isUnchanged(m_savedClassification) == false && m_newClassification.isMandatoryEmpty() == false)
             {
                 m_newClassificationMgr.UpdateClassification(m_document, m_newClassification);
