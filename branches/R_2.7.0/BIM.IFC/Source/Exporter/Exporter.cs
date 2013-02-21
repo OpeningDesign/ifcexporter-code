@@ -796,16 +796,17 @@ namespace BIM.IFC.Exporter
 
                     ii += coincidentLevels.Count;
 
-                    // Add Property set, quantities and classification of Building Storey also to IFC
-                    ProductWrapper productWrapper = ProductWrapper.Create(exporterIFC, false);
-                    productWrapper.AddElement(levelInfo.GetBuildingStorey(), levelInfo, null, false);
+                    using (ProductWrapper productWrapper = ProductWrapper.Create(exporterIFC, false))
+                    {
+                        // Add Property set, quantities and classification of Building Storey also to IFC
+                        productWrapper.AddElement(levelInfo.GetBuildingStorey(), levelInfo, null, false);
 
-                    // Create Quantities (if set) and Classification for Levels (Building Stories) here 
-                    // ExportElementProperties(exporterIFC, level, productWrapper);     // PSet creation is done somewhere else (?), so skip it here
-                    if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE))
-                        ExportElementQuantities(exporterIFC, level, productWrapper);
-                    ExportElementClassifications(exporterIFC, level, productWrapper); 
-
+                        // Create Quantities (if set) and Classification for Levels (Building Stories) here 
+                        // ExportElementProperties(exporterIFC, level, productWrapper);     // PSet creation is done somewhere else (?), so skip it here
+                        if (ExporterCacheManager.ExportOptionsCache.ExportBaseQuantities && !(ExporterCacheManager.ExportOptionsCache.FileVersion == IFCVersion.IFCCOBIE))
+                            ExportElementQuantities(exporterIFC, level, productWrapper);
+                        ExportElementClassifications(exporterIFC, level, productWrapper);
+                    }
                 }
                 transaction.Commit();
             }
@@ -1135,9 +1136,7 @@ namespace BIM.IFC.Exporter
                 else
                 {
                     string currentLine;
-                    int exportFMHandOverView = String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView");
-
-                    if (exportFMHandOverView == 0)
+                    if (String.Compare(exportOptionsCache.SelectedConfigName, "FMHandOverView") == 0)
                     {
                         currentLine = string.Format("ViewDefinition [{0}{1}{2}{3}]",
                            coordinationView,
@@ -1819,30 +1818,25 @@ namespace BIM.IFC.Exporter
                         addressLines.Add(savedAddressItem.AddressLine2);
                 }
 
-                IFCAddressType addressPurpose = IFCAddressType.UserDefined;     // set this as default value
-                if (String.Compare(savedAddressItem.Purpose, "OFFICE", true) == 0)
-                    addressPurpose = Toolkit.IFCAddressType.Office;
-                else if (String.Compare(savedAddressItem.Purpose, "SITE", true) == 0)
-                    addressPurpose = Toolkit.IFCAddressType.Site;
-                else if (String.Compare(savedAddressItem.Purpose, "HOME", true) == 0)
-                    addressPurpose = Toolkit.IFCAddressType.Home;
-                else if (String.Compare(savedAddressItem.Purpose, "DISTRIBUTIONPOINT", true) == 0)
-                    addressPurpose = Toolkit.IFCAddressType.DistributionPoint;
-                else if (String.Compare(savedAddressItem.Purpose, "USERDEFINED", true) == 0)
-                    addressPurpose = Toolkit.IFCAddressType.UserDefined;
-
+                IFCAddressType? addressPurpose = null;
                 if (!String.IsNullOrEmpty(savedAddressItem.Purpose))
                 {
-                    postalAddress = IFCInstanceExporter.CreatePostalAddress(file, addressPurpose, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
-                       savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
-                       savedAddressItem.Country);
+                    addressPurpose = IFCAddressType.UserDefined;     // set this as default value
+                    if (String.Compare(savedAddressItem.Purpose, "OFFICE", true) == 0)
+                        addressPurpose = Toolkit.IFCAddressType.Office;
+                    else if (String.Compare(savedAddressItem.Purpose, "SITE", true) == 0)
+                        addressPurpose = Toolkit.IFCAddressType.Site;
+                    else if (String.Compare(savedAddressItem.Purpose, "HOME", true) == 0)
+                        addressPurpose = Toolkit.IFCAddressType.Home;
+                    else if (String.Compare(savedAddressItem.Purpose, "DISTRIBUTIONPOINT", true) == 0)
+                        addressPurpose = Toolkit.IFCAddressType.DistributionPoint;
+                    else if (String.Compare(savedAddressItem.Purpose, "USERDEFINED", true) == 0)
+                        addressPurpose = Toolkit.IFCAddressType.UserDefined;
                 }
-                else
-                {
-                    postalAddress = IFCInstanceExporter.CreatePostalAddress(file, null, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
-                       savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
-                       savedAddressItem.Country);
-                }
+
+                postalAddress = IFCInstanceExporter.CreatePostalAddress(file, addressPurpose, savedAddressItem.Description, savedAddressItem.UserDefinedPurpose,
+                   savedAddressItem.InternalLocation, addressLines, savedAddressItem.POBox, savedAddressItem.TownOrCity, savedAddressItem.RegionOrState, savedAddressItem.PostalCode, 
+                   savedAddressItem.Country);
 
                 return postalAddress;
 

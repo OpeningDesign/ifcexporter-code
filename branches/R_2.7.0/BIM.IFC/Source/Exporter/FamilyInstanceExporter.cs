@@ -434,9 +434,8 @@ namespace BIM.IFC.Exporter
                                     propertySets.UnionWith(doorPanels);
 
                                     string doorStyleGUID = GUIDUtil.CreateSubElementGUID(originalFamilySymbol, (int)IFCDoorSubElements.DoorStyle);
-                                    string doorStyleTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateDoorStyle(file, doorStyleGUID, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, doorStyleTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
                                        DoorWindowUtil.GetDoorStyleOperation(doorWindowInfo.DoorOperationType),
                                        DoorWindowUtil.GetDoorStyleConstruction(familyInstance),
                                        paramTakesPrecedence, sizeable);
@@ -444,9 +443,8 @@ namespace BIM.IFC.Exporter
                                 }
                             case IFCExportType.ExportSystemFurnitureElementType:
                                 {
-                                    string furnitureTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateSystemFurnitureElementType(file, guid, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, furnitureTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
                                        gentypeElementType);
 
                                     break;
@@ -466,9 +464,8 @@ namespace BIM.IFC.Exporter
 
                                     string windowStyleGUID = GUIDUtil.CreateSubElementGUID(originalFamilySymbol, (int)IFCWindowSubElements.WindowStyle);
 
-                                    string windowStyleTag = NamingUtil.GetTagOverride(familySymbol, NamingUtil.CreateIFCElementId(familySymbol));
                                     typeStyle = IFCInstanceExporter.CreateWindowStyle(file, windowStyleGUID, ownerHistory, gentypeName,
-                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, windowStyleTag,
+                                       gentypeDescription, gentypeApplicableOccurrence, propertySets, repMapList, symbolTag,
                                        constructionType, operationType, paramTakesPrecedence, sizeable);
                                     break;
                                 }
