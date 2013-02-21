@@ -124,19 +124,6 @@ namespace Revit.IFC.Common.Extensions
         public Boolean isUnchanged(IFCClassification classificationToCheck)
         {
             // Only check 4 properties that are stored into the schema.
-            // Copy the classifications to compare into temporary obj and reset classificationTabMsg to null as we do not want to check them.
-/*
-            IFCClassification temp1 = new IFCClassification();
-            IFCClassification temp2 = new IFCClassification();
-
-            temp1 = this.Clone();
-            temp1.classificationTabMsg = null;
-            temp2 = classificationToCheck.Clone();
-            temp2.classificationTabMsg = null;
-
-            if (temp1.Equals(temp2))
-                return true;
-            */
             
             if (string.Compare(this.ClassificationName, classificationToCheck.ClassificationName) == 0
                 && string.Compare(this.ClassificationSource, classificationToCheck.ClassificationSource) == 0
