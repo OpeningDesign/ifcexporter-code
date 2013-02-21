@@ -992,23 +992,16 @@ namespace BIM.IFC.Exporter
                     string spatialElementDescription = NamingUtil.GetDescriptionOverride(spatialElement, desc);
                     string spatialElementObjectType = NamingUtil.GetObjectTypeOverride(spatialElement, null);
 
-                    double spaceElevationWithFlooring = 0.0;
-                    if (ParameterUtil.GetDoubleValueFromElement(spatialElement, "IfcElevationWithFlooring", out spaceElevationWithFlooring) == true)
-                    {
-                        spaceHnd = IFCInstanceExporter.CreateSpace(file, GUIDUtil.CreateGUID(spatialElement),
-                                                      exporterIFC.GetOwnerHistoryHandle(),
-                                                      spatialElementName,spatialElementDescription, spatialElementObjectType,
-                                                      extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
-                                                      internalOrExternal, spaceElevationWithFlooring);
-                    }
-                    else
-                    {
-                        spaceHnd = IFCInstanceExporter.CreateSpace(file, ExporterIFCUtils.CreateGUID(spatialElement),
-                                                      exporterIFC.GetOwnerHistoryHandle(),
-                                                      spatialElementName, spatialElementDescription, spatialElementObjectType,
-                                                      extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
-                                                      internalOrExternal, null);
-                    }
+                    double? spaceElevationWithFlooring = null;
+                    double elevationWithFlooring = 0.0;
+                    if (ParameterUtil.GetDoubleValueFromElement(spatialElement, "IfcElevationWithFlooring", out elevationWithFlooring) == true)
+                        spaceElevationWithFlooring = elevationWithFlooring;
+                    spaceHnd = IFCInstanceExporter.CreateSpace(file, GUIDUtil.CreateGUID(spatialElement),
+                                                  exporterIFC.GetOwnerHistoryHandle(),
+                                                  spatialElementName,spatialElementDescription, spatialElementObjectType,
+                                                  extraParams.GetLocalPlacement(), repHnd, longName, Toolkit.IFCElementComposition.Element,
+                                                  internalOrExternal, spaceElevationWithFlooring);
+
                     transaction2.Commit();
                 }
 
