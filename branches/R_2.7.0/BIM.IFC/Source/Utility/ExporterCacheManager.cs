@@ -918,6 +918,7 @@ namespace BIM.IFC.Utility
             m_AllocatedGeometryObjectCache = null;
             m_AssemblyInstanceCache = null;
             m_ClassificationCache = null;
+            m_ClassificationLocationCache = null;
             m_ConditionalPropertySetsForTypeCache = null;
             m_ContainmentCache = null;
             m_CurveAnnotationCache = null;
