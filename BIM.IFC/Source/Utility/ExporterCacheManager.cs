@@ -53,6 +53,11 @@ namespace BIM.IFC.Utility
         static ClassificationCache m_ClassificationCache;
 
         /// <summary>
+        /// The Classification location cache.
+        /// </summary>
+        static ClassificationLocationCache m_ClassificationLocationCache;
+
+        /// <summary>
         /// The ContainmentCache object.
         /// </summary>
         static ContainmentCache m_ContainmentCache;
@@ -680,6 +685,17 @@ namespace BIM.IFC.Utility
                 return m_ClassificationCache;
             }
             set { m_ClassificationCache = value; }
+        }
+
+        public static ClassificationLocationCache ClassificationLocationCache
+        {
+            get
+            {
+                if (m_ClassificationLocationCache == null)
+                    m_ClassificationLocationCache = new ClassificationLocationCache();
+                return m_ClassificationLocationCache;
+            }
+            set { m_ClassificationLocationCache = value; }
         }
 
         /// <summary>

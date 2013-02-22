@@ -121,6 +121,7 @@
     <Compile Include="Utility\AssemblyInstanceCache.cs" />
     <Compile Include="Utility\BooleanPropertyInfoCache.cs" />
     <Compile Include="Utility\CategoryUtil.cs" />
+    <Compile Include="Utility\ClassificationLocationCache.cs" />
     <Compile Include="Utility\ClassificationCache.cs" />
     <Compile Include="Utility\ContainmentCache.cs" />
     <Compile Include="Utility\CurveAnnotationCache.cs" />
