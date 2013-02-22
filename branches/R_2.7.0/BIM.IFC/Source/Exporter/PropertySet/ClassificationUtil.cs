@@ -115,14 +115,19 @@ namespace BIM.IFC.Exporter.PropertySet
                             else
                                 classification = IFCInstanceExporter.CreateClassification(file, savedClassification.ClassificationSource, savedClassification.ClassificationEdition,
                                     null, savedClassification.ClassificationName);
-
                         }
                         else
                             classification = IFCInstanceExporter.CreateClassification(file, "", "", null, classificationName);
 
                         ExporterCacheManager.ClassificationCache.Add(classificationName, classification);
+                        if (!String.IsNullOrEmpty(savedClassification.ClassificationLocation))
+                            ExporterCacheManager.ClassificationLocationCache.Add(classificationName, savedClassification.ClassificationLocation);
                     }
 
+                    if (String.IsNullOrEmpty(location))
+                    {
+                        ExporterCacheManager.ClassificationLocationCache.TryGetValue(classificationName, out location);
+                    }
                     InsertClassificationReference(exporterIFC, file, element, elemHnd, classificationName, classificationCode, classificationDescription, location);
                 }
             }

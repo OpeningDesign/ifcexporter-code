@@ -66,7 +66,7 @@
             <TabItem Header="Classification" Name="ClassificationTab" Initialized="ClassificationTab_Initialized"  >
                 <Grid>
                     <Label Content="Name" Height="28" HorizontalAlignment="Left" Margin="16,10,0,0" Name="ClassificationName" VerticalAlignment="Top" Foreground="#FFF80A0A" />
-                    <TextBox Text="{Binding Path=ClassificationName, UpdateSourceTrigger=PropertyChanged}" Height="23" HorizontalAlignment="Stretch" Margin="182,10,30,0" Name="NameTextBox" VerticalAlignment="Top" Width="300" HorizontalContentAlignment="Stretch" ToolTip="Name of the Classification System" />
+                    <TextBox Text="{Binding Path=ClassificationName, UpdateSourceTrigger=PropertyChanged}" Height="23" HorizontalAlignment="Stretch" Margin="182,10,30,0" Name="ClassificationNameTextBox" VerticalAlignment="Top" Width="300" HorizontalContentAlignment="Stretch" ToolTip="Name of the Classification System" />
                     <Label Content="Source (Publisher)" Height="28" HorizontalAlignment="Left" Margin="16,39,0,0" Name="SourceOrPublisher" VerticalAlignment="Top" Foreground="#FFF80606" />
                     <TextBox Text="{Binding Path=ClassificationSource, UpdateSourceTrigger=PropertyChanged}" Height="23" HorizontalAlignment="Stretch" Margin="182,39,30,0" Name="SourceTextBox" VerticalAlignment="Top" Width="300" HorizontalContentAlignment="Stretch" ToolTip="Source or publisher of the Classification System" />
                     <Label Content="Edition" Height="28" HorizontalAlignment="Left" Margin="16,68,0,0" Name="Edition" VerticalAlignment="Top" IsEnabled="True" Foreground="#FFFF0D0D" />
